@@ -46,10 +46,10 @@ Python 3.11+, FastAPI, NumPy, qdrant-client (embedded vector DB), requests. Simu
 
 ## Look and feel
 
-Logo (`app/static/logo.svg`, also the favicon): a "V" whose right stroke ends in a rising arrow, on an accent gradient. Four colour palettes can be switched live from the header
-(**Sapphire** default, **Indigo**, **Violet**, **Graphite Gold**), each with a dark and a light variant; green, red and amber stay reserved for gain, loss and caution.
+Logo (`app/static/logo.svg`, also the favicon): a "V" whose right stroke ends in a rising arrow, on a champagne-gold gradient.
+Single **Graphite Gold** palette (warm charcoal surfaces, champagne accent) with a dark default and a light variant behind the theme button; green, red and orange stay reserved for gain, loss and caution.
 Every page has a panel header and an auto-built "On this page" sub-navigation that follows your scroll; the tab bar stays pinned; a footer links the docs and API reference.
-Choices are remembered per browser.
+The theme choice is remembered per browser.
 
 ## Layout
 

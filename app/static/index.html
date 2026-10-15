@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#0a0e16">
-<script>(function(){var t=null,p=null;try{t=localStorage.getItem("vf-theme");p=localStorage.getItem("vf-palette")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t;document.documentElement.dataset.palette=p||"sapphire"})();</script>
+<meta name="theme-color" content="#0d0c0a">
+<script>(function(){var t=null;try{t=localStorage.getItem("vf-theme")}catch(e){}document.documentElement.dataset.theme=t||"dark"})();</script>
 <link rel="icon" type="image/svg+xml" href="/static/logo.svg">
 <link rel="alternate icon" href="/favicon.ico">
 <meta name="description" content="VibeFinance: multi-agent, explainable and personalised investment intelligence for retail investors. Every recommendation is cited, confidence-rated and tailored to your risk profile.">
@@ -23,19 +23,19 @@
   --r:14px;--r-sm:10px;--ease:cubic-bezier(.2,.7,.2,1);
   color-scheme:dark;
   /* one brand accent + three semantic colours + neutrals */
-  --bg:#0a0e16;--surface:#111827;--surface2:#172033;--line:#243049;--text:#e9eef7;--mute:#9aa7bf;
-  --accent:#8f9dff;--accent-ink:#0a0e16;
-  --pos:#3dd9a0;--pos-bg:rgba(61,217,160,.13);--neg:#ff7a8c;--neg-bg:rgba(255,122,140,.13);--warn:#fbc34a;--warn-bg:rgba(251,195,74,.13);
-  --neu:#9aa7bf;--neu-bg:rgba(154,167,191,.14);--mark:rgba(251,195,74,.35);--shadow:0 6px 24px rgba(0,0,0,.35);
+  --bg:#0d0c0a;--surface:#171612;--surface2:#211f19;--line:#37342a;--text:#efece4;--mute:#a8a291;
+  --accent:#dcb862;--accent2:#f3d98e;--accent-ink:#17120a;--mark-ink:#1a1405;      /* Graphite Gold */
+  --pos:#3dd9a0;--pos-bg:rgba(61,217,160,.13);--neg:#ff7a8c;--neg-bg:rgba(255,122,140,.13);--warn:#ff9f5a;--warn-bg:rgba(255,159,90,.14);
+  --neu:#a8a291;--neu-bg:rgba(168,162,145,.14);--mark:rgba(220,184,98,.35);--shadow:0 6px 24px rgba(0,0,0,.4);
   /* aliases used by inline styles in the scripts below */
   --panel:var(--surface);--panel2:var(--surface2);--acc:var(--accent);
 }
 :root[data-theme=light]{
   color-scheme:light;
-  --bg:#f4f6fb;--surface:#ffffff;--surface2:#eef1f8;--line:#d9dfec;--text:#101828;--mute:#51607a;
-  --accent:#4338ca;--accent-ink:#ffffff;
-  --pos:#047857;--pos-bg:#dcf5ea;--neg:#be123c;--neg-bg:#fde4e8;--warn:#92580a;--warn-bg:#fdf0cf;
-  --neu:#51607a;--neu-bg:#e7ebf4;--mark:#fde68a;--shadow:0 6px 24px rgba(16,24,40,.10);
+  --bg:#f8f6f0;--surface:#ffffff;--surface2:#f1ede1;--line:#e0d9c3;--text:#1b1710;--mute:#5f5846;
+  --accent:#8a6410;--accent2:#b88a1e;--accent-ink:#ffffff;--mark-ink:#ffffff;
+  --pos:#047857;--pos-bg:#dcf5ea;--neg:#be123c;--neg-bg:#fde4e8;--warn:#b45309;--warn-bg:#fde7cf;
+  --neu:#5f5846;--neu-bg:#ece7d8;--mark:#f6e3a1;--shadow:0 6px 24px rgba(40,30,10,.10);
 }
 *{box-sizing:border-box}
 html{font-size:16px;-webkit-text-size-adjust:100%}
@@ -72,15 +72,18 @@ button.sm{padding:2px var(--s3);min-height:34px;font-size:.875rem}
 button.icon{width:40px;padding:0;display:grid;place-items:center}
 button.icon svg{width:20px;height:20px;transition:transform .35s var(--ease)}button.icon:hover svg{transform:rotate(25deg)}
 
-details.degr{background:var(--surface2);border-bottom:1px solid var(--line);padding:0 var(--s5)}
-details.degr summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;font-weight:600;font-size:.9rem}
-details.degr summary::-webkit-details-marker{display:none}
-details.degr summary:after{content:"";width:8px;height:8px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(45deg);margin-left:auto;transition:transform .2s var(--ease)}
-details.degr[open] summary:after{transform:rotate(-135deg)}
-details.degr .opts{display:flex;flex-wrap:wrap;gap:var(--s2);padding-bottom:var(--s3);align-items:center}
-details.degr label{display:flex;gap:6px;align-items:center;padding:6px 12px;min-height:36px;border:1px dashed var(--line);border-radius:99px;cursor:pointer;font-size:.875rem;transition:background .15s,border-color .15s}
-details.degr label:hover{border-color:var(--warn)}
-details.degr label.on{border:1px solid var(--warn);background:var(--warn-bg);color:var(--warn)}
+.degr{background:var(--surface2);border-bottom:1px solid var(--line);padding:var(--s3) var(--s5);display:flex;align-items:center;flex-wrap:wrap;gap:var(--s2) var(--s4)}
+.degr .ttl{display:flex;align-items:center;gap:var(--s3);font-weight:600;font-size:.9rem;white-space:nowrap}
+.degr .opts{display:flex;flex-wrap:wrap;gap:var(--s2);align-items:center;flex:1;min-width:0}
+.degr label{display:flex;gap:6px;align-items:center;padding:6px 12px;min-height:36px;border:1px dashed var(--line);border-radius:99px;cursor:pointer;font-size:.875rem;transition:background .15s,border-color .15s}
+.degr label:hover{border-color:var(--warn)}
+.degr label.on{border:1px solid var(--warn);background:var(--warn-bg);color:var(--warn)}
+.degr label{position:relative;gap:8px;padding:6px 14px 6px 12px;white-space:nowrap}
+.degr label input{position:absolute;opacity:0;inset:0;width:100%;height:100%;margin:0;cursor:pointer}
+.degr label:before{content:"";flex:none;width:9px;height:9px;border-radius:50%;border:1.5px solid var(--mute);transition:background .15s,border-color .15s,box-shadow .15s}
+.degr label.on:before{background:var(--warn);border-color:var(--warn);box-shadow:0 0 0 3px var(--warn-bg)}
+.degr label:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.degr .count{display:inline-grid;place-items:center;min-width:22px;height:22px;padding:0 6px;border-radius:99px;background:var(--warn);color:#17120a;font-size:.78rem;font-weight:700}
 nav{display:flex;gap:2px;padding:0 var(--s5);border-bottom:1px solid var(--line);background:var(--surface);overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:20}
 nav::-webkit-scrollbar{display:none}
 nav button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:var(--s3) var(--s4);min-height:48px;color:var(--mute);white-space:nowrap;font-weight:500;box-shadow:none}
@@ -178,10 +181,11 @@ main.enter .cbar i,main.enter .hbar i,main.enter .div i{transform-origin:left;an
 @media(max-width:1400px){.users{order:3;flex:1 1 100%}.actions{margin-left:auto}}
 @media(max-width:900px){
   header{padding:var(--s3) var(--s4)}.users{order:3;flex:1 1 100%}.actions{margin-left:auto}
-  main{padding:var(--s4)}nav{padding:0 var(--s2)}details.degr{padding:0 var(--s4)}
+  main{padding:var(--s4)}nav{padding:0 var(--s2)}.degr{padding:var(--s3) var(--s4)}
   .card{padding:var(--s4);margin-bottom:var(--s4)}.grid2{gap:var(--s4)}
 }
 @media(max-width:700px){
+  .degr .opts{flex-basis:100%}
   .brand{flex:1 1 100%;gap:var(--s2)}.actions{flex:1 1 100%}.actions .primary{flex:1}.actions #arch{padding:0 var(--s3)}
   button{min-height:44px}button.sm{min-height:40px}
   .kpis{grid-template-columns:repeat(2,1fr);gap:var(--s3)}.kpi{padding:var(--s3)}.kpi .v{font-size:1.25rem}
@@ -201,16 +205,6 @@ main.enter .cbar i,main.enter .hbar i,main.enter .div i{transform-origin:left;an
 
 @media(max-width:700px){table.cards td.num{text-align:left}table.cards .chip,.agentcard .chip,.alert .chip{white-space:normal}}
 
-/* ============ Palettes: one accent pair per palette; green/red/amber stay reserved for meaning ============ */
-:root{--accent2:#c084fc;--mark-ink:#fff}
-:root[data-theme=light]{--accent2:#9333ea}
-:root[data-palette=sapphire]{--bg:#07101d;--surface:#0e1a2e;--surface2:#142440;--line:#223756;--accent:#5ea0ff;--accent2:#27d3f2;--accent-ink:#06101f}
-:root[data-palette=sapphire][data-theme=light]{--bg:#f1f5fb;--surface:#ffffff;--surface2:#e8eff9;--line:#d2ddee;--accent:#1d4ed8;--accent2:#0891b2;--accent-ink:#ffffff}
-:root[data-palette=violet]{--bg:#0d0a18;--surface:#161126;--surface2:#1f1836;--line:#33284f;--accent:#a98bff;--accent2:#f472b6;--accent-ink:#120b22}
-:root[data-palette=violet][data-theme=light]{--bg:#f6f3fc;--surface:#ffffff;--surface2:#eee9f9;--line:#dcd3f0;--accent:#6d28d9;--accent2:#be185d;--accent-ink:#ffffff}
-:root[data-palette=gold]{--bg:#0d0c0a;--surface:#171612;--surface2:#211f19;--line:#37342a;--accent:#dcb862;--accent2:#f3d98e;--accent-ink:#17120a;--mark-ink:#1a1405;--warn:#ff9f5a;--warn-bg:rgba(255,159,90,.14)}
-:root[data-palette=gold][data-theme=light]{--bg:#f8f6f0;--surface:#ffffff;--surface2:#f1ede1;--line:#e0d9c3;--accent:#8a6410;--accent2:#b88a1e;--accent-ink:#ffffff;--mark-ink:#ffffff;--warn:#b45309;--warn-bg:#fde7cf}
-
 /* ============ Brand ============ */
 .brand-link{display:flex;align-items:center;gap:var(--s3);text-decoration:none;color:inherit;border-radius:12px}
 .brand-link:hover .mark{transform:rotate(-6deg) scale(1.05)}
@@ -219,16 +213,6 @@ main.enter .cbar i,main.enter .hbar i,main.enter .div i{transform-origin:left;an
 .wordmark .logo{font-size:1.3rem}
 .wordmark small{font-size:.72rem;color:var(--mute);letter-spacing:.03em;margin-top:3px}
 .brand{gap:var(--s3) var(--s4)}
-.pal-wrap{position:relative}
-.pal-dot{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--line)}
-.palmenu{position:absolute;right:0;top:calc(100% + 8px);width:290px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s2);box-shadow:var(--shadow);z-index:70;display:none}
-.palmenu.on{display:block;animation:pop .22s var(--ease)}
-.palmenu h4{margin:var(--s2) var(--s3) var(--s1);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
-.palopt{display:flex;align-items:center;gap:var(--s3);width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:var(--r-sm);padding:var(--s2) var(--s3);box-shadow:none}
-.palopt:hover{background:var(--surface2);transform:none;box-shadow:none}
-.palopt.on{border-color:var(--accent);background:var(--surface2)}
-.palopt .sw{width:34px;height:34px;border-radius:10px;flex:none}
-.palopt b{display:block;font-size:.95rem}.palopt small{display:block;color:var(--mute);font-size:.78rem;line-height:1.3}
 
 /* ============ Panel header, sub-navigation, footer ============ */
 :root{--nav-h:49px}
@@ -260,9 +244,73 @@ footer a:hover,footer button.lnk:hover{color:var(--accent);transform:none;box-sh
 footer .about{font-size:.875rem;color:var(--mute);max-width:42ch;margin-top:var(--s3)}
 footer .legal{border-top:1px solid var(--line);padding:var(--s3) var(--s5);max-width:1400px;margin:0 auto;font-size:.8rem;color:var(--mute)}
 @media(max-width:900px){footer .in{grid-template-columns:1fr 1fr}#panelhead{padding:var(--s4) var(--s4) 0}#subnav .in{padding:var(--s2) var(--s4)}#panelhead p{margin-left:0}}
-@media(max-width:700px){footer .in{grid-template-columns:1fr;padding:var(--s5) var(--s4)}#panelhead h1{font-size:1.3rem}.palmenu{position:fixed;left:var(--s4);right:var(--s4);top:auto;bottom:var(--s4);width:auto}#subnav .lbl{display:none}nav button span{display:none}nav button.on span{display:inline}}
+@media(max-width:700px){footer .in{grid-template-columns:1fr;padding:var(--s5) var(--s4)}#panelhead h1{font-size:1.3rem}#subnav .lbl{display:none}}
 .arch-short{display:none}.actions .primary{white-space:nowrap}
 @media(max-width:700px){.arch-long{display:none}.arch-short{display:inline}}
+
+/* ============ Compact navigation: nothing scrolls sideways, tighter gaps ============ */
+:root{--nav-h:46px}
+header{padding:10px var(--s5);gap:var(--s2) var(--s4)}
+.brand{gap:var(--s2) var(--s3)}
+.users{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s2);overflow:visible;flex:1 1 380px;max-width:660px;padding:0}
+.user{min-width:0;padding:6px var(--s3)}
+.user b,.user small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.degr{padding:8px var(--s5);gap:var(--s2) var(--s3)}
+.degr .opts{gap:6px;flex-wrap:wrap;overflow:visible}
+.degr label{min-height:32px;padding:4px 12px 4px 10px;font-size:.85rem}
+nav{display:grid;grid-template-columns:repeat(8,minmax(0,1fr));padding:0 var(--s4);overflow:visible;height:var(--nav-h)}
+nav button{justify-content:center;padding:0 6px;min-height:0;height:100%;gap:6px;font-size:.9rem;text-align:center;line-height:1.15}
+nav button span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#subnav .in{flex-wrap:wrap;overflow:visible;padding:6px var(--s5);gap:6px}
+#subnav a{padding:4px 12px}
+#panelhead{padding:var(--s4) var(--s5) 0}
+main{padding:var(--s4) var(--s5)}
+.kpis{margin-bottom:var(--s4);gap:var(--s3)}
+.card{margin-bottom:var(--s4)}
+.grid2{gap:var(--s4)}
+@media(max-width:1180px){
+  :root{--nav-h:58px}
+  nav{padding:0 var(--s2)}
+  nav button{flex-direction:column;gap:3px;padding:6px 2px;font-size:.78rem}
+  nav button span{white-space:normal;overflow:visible}
+  nav button svg{width:20px;height:20px}
+}
+@media(max-width:900px){
+  header{padding:10px var(--s4)}.degr{padding:8px var(--s4)}
+  #panelhead{padding:var(--s3) var(--s4) 0}main{padding:var(--s3) var(--s4)}#subnav .in{padding:6px var(--s4)}
+}
+@media(max-width:700px){
+  :root{--nav-h:0px}
+  nav{grid-template-columns:repeat(4,minmax(0,1fr));position:static;height:auto}
+  nav button{min-height:58px;border-bottom:2px solid transparent}
+  #subnav{position:static}
+  .users{flex:1 1 100%;max-width:none}.user{padding:6px var(--s2)}.user b{font-size:.92rem}.user small .cap{display:none}
+  .degr label{min-height:36px;padding:5px 10px 5px 8px;font-size:.82rem}
+  .kpis{gap:var(--s2)}
+  nav button{font-size:.74rem;letter-spacing:-.01em}
+  .user b .ln{display:none}
+  .degr{padding:6px var(--s4)}.degr .ttl{font-size:.85rem;flex-basis:100%}
+  .degr .opts{gap:5px}.degr label{min-height:30px;padding:3px 10px 3px 8px;font-size:.78rem;gap:6px}
+  .badge{font-size:.72rem;padding:1px 8px}
+  header{padding:8px var(--s4)}
+}
+
+/* ============ Symmetric navigation: equal-width cells, no ragged wrapping ============ */
+#subnav .in{max-width:1400px;margin:0 auto;padding:6px var(--s5);display:block;overflow:visible}
+#subnavin{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+#subnavin a{display:block;text-align:center;background:var(--surface);border:0;border-radius:0;padding:9px 8px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;transition:background .15s,color .15s}
+#subnavin a:hover{background:var(--surface2);color:var(--text)}
+#subnavin a.on{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.degr .opts{display:grid;grid-template-columns:repeat(var(--n,6),minmax(0,1fr));gap:6px;flex:1;min-width:0}
+.degr label{justify-content:center;min-width:0}
+.degr label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media(max-width:1100px){.degr .opts{grid-template-columns:repeat(3,minmax(0,1fr))}.degr .ttl{flex-basis:100%}}
+@media(max-width:900px){
+  #subnav .in{padding:6px var(--s4)}
+  #subnavin{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #subnavin a:last-child:nth-child(odd){grid-column:1/-1}
+}
+@media(max-width:700px){.degr .opts{grid-template-columns:repeat(2,minmax(0,1fr));flex-basis:100%}}
 </style>
 </head>
 <body>
@@ -283,14 +331,13 @@ footer .legal{border-top:1px solid var(--line);padding:var(--s3) var(--s5);max-w
   <div class="actions">
     <button class="primary" id="run">Run analysis</button>
     <button id="arch" aria-label="Architecture and decision logic"><span class="arch-long">Architecture</span><span class="arch-short">Docs</span></button>
-    <div class="pal-wrap"><button class="icon" id="pal" aria-label="Colour palette" aria-haspopup="true" aria-expanded="false" title="Colour palette"><span class="pal-dot"></span></button><div class="palmenu" id="palmenu" role="menu"></div></div>
     <button class="icon" id="theme" aria-label="Switch colour theme"></button>
   </div>
 </header>
-<details class="degr" id="degr"></details>
+<section class="degr" id="degr" aria-label="Degraded-data scenarios"></section>
 <nav id="tabs" role="tablist" aria-label="Sections"></nav>
 <section id="panelhead" aria-live="polite"></section>
-<div id="subnav" hidden><div class="in" id="subnavin"></div></div>
+<div id="subnav" hidden aria-label="On this page"><div class="in"><div id="subnavin" role="navigation" aria-label="On this page"></div></div></div>
 <main id="main" aria-live="polite"></main>
 <footer>
   <div class="in">
@@ -333,26 +380,7 @@ function skeleton(kind){
   if(kind==="eval") return kp + `<div class="grid2"><div>${skCard(6)}${skCard(5)}</div><div>${skCard(5)}${skCard(4)}</div></div>`;
   return `<div class="grid2"><div>${skCard(7)}${skCard(5)}</div><div><div class="sk block" style="margin-bottom:24px"></div>${skCard(4)}</div></div>`;
 }
-const PALETTES = {
-  sapphire:["Sapphire","#5ea0ff","#27d3f2","Trust and clarity. Classic finance blue."],
-  indigo:["Indigo","#8f9dff","#c084fc","Calm slate with a periwinkle accent."],
-  violet:["Violet","#a98bff","#f472b6","Modern fintech. Deep aubergine and pink."],
-  gold:["Graphite Gold","#dcb862","#f3d98e","Private-banking feel. Warm charcoal and champagne."]};
-function setPalette(p){
-  if(!PALETTES[p]) p = "sapphire";
-  document.documentElement.dataset.palette = p;
-  try{ localStorage.setItem("vf-palette", p); }catch(e){}
-  document.querySelectorAll(".palopt").forEach(b => { b.classList.toggle("on", b.dataset.p===p); b.setAttribute("aria-checked", b.dataset.p===p); });
-  syncThemeColor();
-}
-function syncThemeColor(){ const m=document.querySelector('meta[name=theme-color]'); if(m) m.content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#07101d"; }
-function buildPalMenu(){
-  $("#palmenu").innerHTML = `<h4>Colour palette</h4>` + Object.entries(PALETTES).map(([k,[n,a,b,d]]) =>
-    `<button class="palopt" role="menuitemradio" data-p="${k}"><span class="sw" style="background:linear-gradient(135deg,${a},${b})"></span><span><b>${n}</b><small>${d}</small></span></button>`).join("");
-  $("#palmenu").querySelectorAll(".palopt").forEach(b => b.onclick = () => { setPalette(b.dataset.p); closePal(); });
-  setPalette(document.documentElement.dataset.palette);
-}
-function closePal(){ $("#palmenu").classList.remove("on"); $("#pal").setAttribute("aria-expanded","false"); }
+function syncThemeColor(){ const m=document.querySelector('meta[name=theme-color]'); if(m) m.content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#0d0c0a"; }
 const ICONS = {
   dash:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
   analysis:'<path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/>',
@@ -378,6 +406,16 @@ function renderPanelHead(){
   $("#panelhead").innerHTML = `<div><h1><span class="ico">${svgIcon(S.tab)}</span>${esc(t)}</h1><p>${esc(sub())}</p></div>
     <div class="meta">${S.res?`<span class="badge">${esc(S.res.user.name)} · ${esc(S.res.recommendations[0].profile_label)}</span>`:""}${act?`<span class="badge warn">${act} data scenario${act>1?"s":""} active</span>`:""}</div>`;
 }
+const SEC_LABELS = [
+  [/^What changed/i,"What changed"],[/^Recent trade log/i,"Trade log"],[/^Behavioural pattern/i,"Behaviour"],[/^Your decisions/i,"Decisions"],[/^Place a paper trade/i,"Paper trade"],
+  [/^Full reasoning/i,"Reasoning"],[/^Specialised agents/i,"Agents"],[/^Price & volume/i,"Price & volume"],[/^How the agents/i,"Weighting"],
+  [/^Confidence calibration/i,"Calibration"],[/^Sources/i,"Sources"],[/^Parallel execution/i,"Timeline"],
+  [/^Session metrics/i,"Metrics"],[/^Pipeline stages/i,"Pipeline"],[/^Signal accuracy/i,"Accuracy"],[/^Agent latency/i,"Latency"],
+  [/^Reliability/i,"Reliability"],[/^Latency under load/i,"Load test"],[/^Personalised strategy/i,"Strategy"],
+  [/^Where the risk/i,"Risk map"],[/^Stress tests/i,"Stress tests"],[/^Correlation/i,"Correlation"],[/^Sector exposure/i,"Sectors"],[/^Your alert rules/i,"Alert rules"],
+  [/^Same market inputs/i,"Comparison"],[/^Edit .* profile/i,"Profile"],[/^Behavioural analytics/i,"Behaviour"],
+  [/^Semantic search/i,"Search"],[/^Vector index/i,"Index"],[/^Retrieval quality/i,"Quality"],
+  [/^Live market data/i,"Fetch"],[/^Source status/i,"Sources"]];
 let _spy = null, _subTimer = null;
 function buildSubnav(){
   const wrap = $("#subnav"), cards = [...document.querySelectorAll("#main .card")].filter(c => c.querySelector("h3"));
@@ -389,16 +427,18 @@ function buildSubnav(){
     label = label.replace(/^[^']+'s\s+/, "").replace(/\s+for\s+.*$/, "").replace(/^Portfolio & watchlist alerts$/, "Alerts").replace(/^Alerts for .*/, "Alerts").split(":")[0].replace(/\s+vs\s+.*$/, "").replace(/\s+\(this run\)/, "");
     label = label.charAt(0).toUpperCase() + label.slice(1);
     if(label.length > 26) label = label.slice(0, 24).trim() + "…";
+    for(const [rx, short] of SEC_LABELS){ if(rx.test(first ? first.textContent.trim() : h.textContent.trim())){ label = short; break; } }
     c.id = c.id || `sec-${S.tab}-${i}`;
     return [c.id, label];
   });
-  $("#subnavin").innerHTML = `<span class="lbl">On this page</span>` + items.map(([id, l]) => `<a href="#${id}" data-sec="${id}">${esc(l)}</a>`).join("");
+  $("#subnavin").style.setProperty("--n", items.length);
+  $("#subnavin").innerHTML = items.map(([id, l]) => `<a href="#${id}" data-sec="${id}" title="${esc(l)}">${esc(l)}</a>`).join("");
   wrap.hidden = false;
   const links = [...document.querySelectorAll("#subnavin a")];
   links.forEach(a => a.onclick = e => { e.preventDefault(); document.getElementById(a.dataset.sec).scrollIntoView({behavior:"smooth", block:"start"}); });
   _spy = new IntersectionObserver(entries => {
     entries.forEach(en => { if(en.isIntersecting){ links.forEach(l => l.classList.toggle("on", l.dataset.sec===en.target.id));
-      const on = links.find(l => l.classList.contains("on")); if(on) on.scrollIntoView({block:"nearest", inline:"center"}); } });
+      } });
   }, {rootMargin:"-130px 0px -65% 0px"});
   cards.forEach(c => _spy.observe(c));
   links[0].classList.add("on");
@@ -408,10 +448,10 @@ function setTheme(t){
   document.documentElement.dataset.theme = t; setTimeout(syncThemeColor, 0);
   try{ localStorage.setItem("vf-theme", t); }catch(e){}
   const b = $("#theme"); b.innerHTML = t==="dark" ? SUN : MOON; b.title = t==="dark" ? "Switch to light theme" : "Switch to dark theme";
-  const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = t==="dark" ? "#0a0e16" : "#f4f6fb";
+  const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = t==="dark" ? "#0d0c0a" : "#f8f6f0";
 }
 const CW = () => Math.max(300, Math.min(620, innerWidth - 64));
-const S = {animate:true, degrOpen: false, rid:0, meta:null, user:"asha", degr:new Set(), res:null, sym:null, tab:"dash", compare:null, bench:null, prices:{}, busy:false};
+const S = {animate:true, rid:0, meta:null, user:"asha", degr:new Set(), res:null, sym:null, tab:"dash", compare:null, bench:null, prices:{}, busy:false};
 
 async function api(path, opts){
   const r = await fetch(path, opts && {method:opts.method||"POST", headers:{"content-type":"application/json"}, body: JSON.stringify(opts.body)});
@@ -439,35 +479,34 @@ async function boot(){
   renderUsers(); renderDegr(); renderTabs();
   $("#run").onclick = () => run(); $("#arch").onclick = showArch;
   setTheme(document.documentElement.dataset.theme || "dark");
-  buildPalMenu();
-  $("#pal").onclick = e => { e.stopPropagation(); const on = $("#palmenu").classList.toggle("on"); $("#pal").setAttribute("aria-expanded", on); };
-  document.addEventListener("click", e => { if(!e.target.closest(".pal-wrap")) closePal(); const g = e.target.closest("[data-goto]"); if(g){ e.preventDefault(); S.tab = g.dataset.goto; S.animate=true; renderTabs(); render(); window.scrollTo({top:0, behavior:"smooth"}); } });
+  document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if(g){ e.preventDefault(); S.tab = g.dataset.goto; S.animate=true; renderTabs(); render(); window.scrollTo({top:0, behavior:"smooth"}); } });
   $("#arch2").onclick = showArch;
   new MutationObserver(() => { clearTimeout(_subTimer); _subTimer = setTimeout(buildSubnav, 80); }).observe($("#main"), {childList:true});
   addEventListener("scroll", () => $("#subnav").classList.toggle("stuck", scrollY > 160), {passive:true});
   $("#theme").onclick = () => setTheme(document.documentElement.dataset.theme==="light" ? "dark" : "light");
   matchMedia("(max-width:700px)").addEventListener("change", () => { if(S.res) render(); });
-  document.addEventListener("keydown", e => { if(e.key==="Escape"){ $("#modal").classList.remove("on"); closePal(); } });
+  document.addEventListener("keydown", e => { if(e.key==="Escape"){ $("#modal").classList.remove("on"); } });
   document.addEventListener("click", e => { const t=e.target.closest("[data-src]"); if(t) openSource(t.dataset.src); if(e.target.id==="modal") $("#modal").classList.remove("on"); });
   await run();
 }
 function renderUsers(){
-  $("#users").innerHTML = S.meta.users.map(u => `<button class="user ${u.id===S.user?"on":""}" data-u="${u.id}" aria-pressed="${u.id===S.user}"><b>${esc(u.name)}</b><small>risk ${u.risk_tolerance}/10 · max position ${u.max_position_pct}%</small></button>`).join("");
+  $("#users").innerHTML = S.meta.users.map(u => `<button class="user ${u.id===S.user?"on":""}" data-u="${u.id}" aria-pressed="${u.id===S.user}"><b>${esc(u.name.split(" ")[0])}<span class="ln"> ${esc(u.name.split(" ").slice(1).join(" "))}</span></b><small>risk ${u.risk_tolerance}/10<span class="cap"> · max position ${u.max_position_pct}%</span></small></button>`).join("");
   document.querySelectorAll(".user").forEach(el => el.onclick = () => { S.user = el.dataset.u; S.compare=null; S.animate=true; renderUsers(); run(); });
 }
 function renderDegr(){
   const n = S.degr.size, d = $("#degr");
-  d.innerHTML = `<summary>Degraded-data scenarios ${n?`<span class="badge warn">${n} active</span>`:`<span class="badge">none active</span>`}</summary><div class="opts">`
+  const SHORT = {price_feed_stale:"Stale prices", price_feed_down:"Prices down", price_corrupt:"Corrupt prices", sentiment_feed_down:"News down", filings_unavailable:"No filings", slow_agent:"Slow agent"};
+  d.innerHTML = `<div class="ttl">Degraded-data scenarios ${n?`<span class="count" title="${n} scenario${n>1?"s":""} active">${n}</span>`:""}</div><div class="opts">`
     + Object.entries(S.meta.degradations).map(([k,v]) =>
-      `<label class="${S.degr.has(k)?"on":""}" title="${esc(v)}"><input type="checkbox" data-d="${k}" ${S.degr.has(k)?"checked":""}> ${k.replace(/_/g," ")}</label>`).join("")
-    + `<span class="mute small">Inject a failure; the pipeline must still return cited output.</span></div>`;
-  d.open = S.degrOpen; d.ontoggle = () => { S.degrOpen = d.open; };
+      `<label class="${S.degr.has(k)?"on":""}" title="${esc(v)}"><input type="checkbox" data-d="${k}" ${S.degr.has(k)?"checked":""}><span>${SHORT[k]||k.replace(/_/g," ")}</span></label>`).join("")
+    + `</div>`;
+  d.querySelector(".opts").style.setProperty("--n", Object.keys(S.meta.degradations).length);
   d.querySelectorAll("[data-d]").forEach(el => el.onchange = () => { el.checked?S.degr.add(el.dataset.d):S.degr.delete(el.dataset.d); S.compare=null; renderDegr(); run(); });
 }
-const TABS = [["dash","Dashboard"],["analysis","Stock analysis"],["person","Personalisation"],["risk","Portfolio risk & alerts"],["search","Filings search"],["live","Live data"],["eval","Evaluation & metrics"],["hist","Sessions & changes"]];
+const TABS = [["dash","Dashboard"],["analysis","Stock analysis"],["person","Personalisation"],["risk","Risk & alerts"],["search","Filings search"],["live","Live data"],["eval","Evaluation"],["hist","Sessions"]];
 function renderTabs(){
   $("#tabs").innerHTML = TABS.map(([k,l]) => `<button role="tab" aria-selected="${S.tab===k}" class="${S.tab===k?"on":""}" data-t="${k}">${svgIcon(k)}<span>${l}</span></button>`).join("");
-  document.querySelectorAll("[data-t]").forEach(el => el.onclick = () => { S.tab = el.dataset.t; S.animate=true; renderTabs(); render(); window.scrollTo({top:0}); el.scrollIntoView({block:"nearest",inline:"center"}); });
+  document.querySelectorAll("[data-t]").forEach(el => el.onclick = () => { S.tab = el.dataset.t; S.animate=true; renderTabs(); render(); window.scrollTo({top:0}); });
   renderPanelHead();
 }
 async function run(){

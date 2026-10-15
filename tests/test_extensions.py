@@ -344,7 +344,7 @@ def test_logo_favicon_and_page_shell():
     html = c.get("/").text
     assert 'rel="icon"' in html and "/static/logo.svg" in html
     assert "<title>VibeFinance" in html and 'name="description"' in html
-    for needle in ('id="panelhead"', 'id="subnav"', "<footer>", 'id="palmenu"', 'data-palette'):
+    for needle in ('id="panelhead"', 'id="subnav"', "<footer>", "--accent:#dcb862"):      # Graphite Gold is the single palette
         assert needle in html
-    for p in ("sapphire", "indigo", "violet", "gold"):
-        assert f"data-palette={p}" in html or p == "indigo"
+    for gone in ("data-palette", "palmenu", "sapphire", "violet"):
+        assert gone not in html
