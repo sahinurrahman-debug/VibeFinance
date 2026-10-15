@@ -4,10 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#0a0e16">
-<script>(function(){var t=null;try{t=localStorage.getItem("vf-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t})();</script>
+<script>(function(){var t=null,p=null;try{t=localStorage.getItem("vf-theme");p=localStorage.getItem("vf-palette")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t;document.documentElement.dataset.palette=p||"sapphire"})();</script>
+<link rel="icon" type="image/svg+xml" href="/static/logo.svg">
+<link rel="alternate icon" href="/favicon.ico">
+<meta name="description" content="VibeFinance: multi-agent, explainable and personalised investment intelligence for retail investors. Every recommendation is cited, confidence-rated and tailored to your risk profile.">
+<meta property="og:title" content="VibeFinance | Multi-agent financial intelligence">
+<meta property="og:description" content="Cited, explainable, personalised investment intelligence from six cooperating AI agents.">
+<meta property="og:image" content="/static/logo.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-<title>VibeFinance - Multi-Agent Financial Intelligence</title>
+<title>VibeFinance | Multi-agent financial intelligence</title>
 <style>
 /* ============ Design tokens ============ */
 :root{
@@ -194,24 +200,108 @@ main.enter .cbar i,main.enter .hbar i,main.enter .div i{transform-origin:left;an
 @keyframes sheet{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 
 @media(max-width:700px){table.cards td.num{text-align:left}table.cards .chip,.agentcard .chip,.alert .chip{white-space:normal}}
+
+/* ============ Palettes: one accent pair per palette; green/red/amber stay reserved for meaning ============ */
+:root{--accent2:#c084fc;--mark-ink:#fff}
+:root[data-theme=light]{--accent2:#9333ea}
+:root[data-palette=sapphire]{--bg:#07101d;--surface:#0e1a2e;--surface2:#142440;--line:#223756;--accent:#5ea0ff;--accent2:#27d3f2;--accent-ink:#06101f}
+:root[data-palette=sapphire][data-theme=light]{--bg:#f1f5fb;--surface:#ffffff;--surface2:#e8eff9;--line:#d2ddee;--accent:#1d4ed8;--accent2:#0891b2;--accent-ink:#ffffff}
+:root[data-palette=violet]{--bg:#0d0a18;--surface:#161126;--surface2:#1f1836;--line:#33284f;--accent:#a98bff;--accent2:#f472b6;--accent-ink:#120b22}
+:root[data-palette=violet][data-theme=light]{--bg:#f6f3fc;--surface:#ffffff;--surface2:#eee9f9;--line:#dcd3f0;--accent:#6d28d9;--accent2:#be185d;--accent-ink:#ffffff}
+:root[data-palette=gold]{--bg:#0d0c0a;--surface:#171612;--surface2:#211f19;--line:#37342a;--accent:#dcb862;--accent2:#f3d98e;--accent-ink:#17120a;--mark-ink:#1a1405;--warn:#ff9f5a;--warn-bg:rgba(255,159,90,.14)}
+:root[data-palette=gold][data-theme=light]{--bg:#f8f6f0;--surface:#ffffff;--surface2:#f1ede1;--line:#e0d9c3;--accent:#8a6410;--accent2:#b88a1e;--accent-ink:#ffffff;--mark-ink:#ffffff;--warn:#b45309;--warn-bg:#fde7cf}
+
+/* ============ Brand ============ */
+.brand-link{display:flex;align-items:center;gap:var(--s3);text-decoration:none;color:inherit;border-radius:12px}
+.brand-link:hover .mark{transform:rotate(-6deg) scale(1.05)}
+.mark{flex:none;width:40px;height:40px;transition:transform .35s var(--ease);filter:drop-shadow(0 4px 14px color-mix(in srgb,var(--accent) 38%,transparent))}
+.wordmark{display:flex;flex-direction:column;line-height:1.1}
+.wordmark .logo{font-size:1.3rem}
+.wordmark small{font-size:.72rem;color:var(--mute);letter-spacing:.03em;margin-top:3px}
+.brand{gap:var(--s3) var(--s4)}
+.pal-wrap{position:relative}
+.pal-dot{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 0 2px var(--surface),0 0 0 3px var(--line)}
+.palmenu{position:absolute;right:0;top:calc(100% + 8px);width:290px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s2);box-shadow:var(--shadow);z-index:70;display:none}
+.palmenu.on{display:block;animation:pop .22s var(--ease)}
+.palmenu h4{margin:var(--s2) var(--s3) var(--s1);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.palopt{display:flex;align-items:center;gap:var(--s3);width:100%;text-align:left;border:1px solid transparent;background:none;border-radius:var(--r-sm);padding:var(--s2) var(--s3);box-shadow:none}
+.palopt:hover{background:var(--surface2);transform:none;box-shadow:none}
+.palopt.on{border-color:var(--accent);background:var(--surface2)}
+.palopt .sw{width:34px;height:34px;border-radius:10px;flex:none}
+.palopt b{display:block;font-size:.95rem}.palopt small{display:block;color:var(--mute);font-size:.78rem;line-height:1.3}
+
+/* ============ Panel header, sub-navigation, footer ============ */
+:root{--nav-h:49px}
+nav{height:var(--nav-h)}
+nav button{display:flex;align-items:center;gap:var(--s2)}
+nav button svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;opacity:.85}
+nav button.on svg{stroke:var(--accent);opacity:1}
+#panelhead{max-width:1400px;margin:0 auto;padding:var(--s5) var(--s5) 0;display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s3) var(--s5);flex-wrap:wrap}
+#panelhead h1{font-size:1.55rem;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:var(--s3);line-height:1.2}
+#panelhead h1 .ico{display:grid;place-items:center;width:38px;height:38px;border-radius:11px;background:color-mix(in srgb,var(--accent) 14%,var(--surface2));border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line))}
+#panelhead h1 svg{width:21px;height:21px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#panelhead p{margin:var(--s1) 0 0 50px;color:var(--mute);font-size:.95rem;max-width:70ch}
+#panelhead .meta{display:flex;gap:var(--s2);flex-wrap:wrap}
+#subnav{position:sticky;top:var(--nav-h);z-index:15;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid transparent;transition:border-color .2s}
+#subnav.stuck{border-bottom-color:var(--line)}
+#subnav .in{max-width:1400px;margin:0 auto;padding:var(--s2) var(--s5);display:flex;gap:var(--s2);overflow-x:auto;scrollbar-width:none;align-items:center}
+#subnav .in::-webkit-scrollbar{display:none}
+#subnav .lbl{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-right:var(--s2);white-space:nowrap}
+#subnav a{flex:none;text-decoration:none;color:var(--mute);font-size:.875rem;font-weight:500;padding:6px 14px;border-radius:99px;border:1px solid transparent;white-space:nowrap;transition:color .15s,background .15s,border-color .15s}
+#subnav a:hover{color:var(--text);background:var(--surface2)}
+#subnav a.on{color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,transparent);border-color:color-mix(in srgb,var(--accent) 35%,transparent)}
+.card[id]{scroll-margin-top:calc(var(--nav-h) + 64px)}
+footer{margin-top:var(--s7);border-top:1px solid var(--line);background:var(--surface)}
+footer .in{max-width:1400px;margin:0 auto;padding:var(--s6) var(--s5);display:grid;grid-template-columns:1.4fr repeat(3,1fr);gap:var(--s5)}
+footer h5{margin:0 0 var(--s3);font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+footer ul{list-style:none;margin:0;padding:0;display:grid;gap:var(--s2)}
+footer a,footer button.lnk{color:var(--text);text-decoration:none;font-size:.9rem;background:none;border:0;padding:0;min-height:0;cursor:pointer;box-shadow:none;font-weight:400;text-align:left}
+footer a:hover,footer button.lnk:hover{color:var(--accent);transform:none;box-shadow:none}
+footer .about{font-size:.875rem;color:var(--mute);max-width:42ch;margin-top:var(--s3)}
+footer .legal{border-top:1px solid var(--line);padding:var(--s3) var(--s5);max-width:1400px;margin:0 auto;font-size:.8rem;color:var(--mute)}
+@media(max-width:900px){footer .in{grid-template-columns:1fr 1fr}#panelhead{padding:var(--s4) var(--s4) 0}#subnav .in{padding:var(--s2) var(--s4)}#panelhead p{margin-left:0}}
+@media(max-width:700px){footer .in{grid-template-columns:1fr;padding:var(--s5) var(--s4)}#panelhead h1{font-size:1.3rem}.palmenu{position:fixed;left:var(--s4);right:var(--s4);top:auto;bottom:var(--s4);width:auto}#subnav .lbl{display:none}nav button span{display:none}nav button.on span{display:inline}}
+.arch-short{display:none}.actions .primary{white-space:nowrap}
+@media(max-width:700px){.arch-long{display:none}.arch-short{display:inline}}
 </style>
 </head>
 <body>
 <div id="bar" aria-hidden="true"></div>
 <header>
-  <div class="brand"><div class="logo">Vibe<span>Finance</span></div>
+  <div class="brand">
+    <a class="brand-link" href="/" aria-label="VibeFinance home">
+      <svg class="mark" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="vfg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" style="stop-color:var(--accent)"/><stop offset="1" style="stop-color:var(--accent2)"/></linearGradient></defs>
+        <rect width="40" height="40" rx="11" fill="url(#vfg)"/>
+        <path d="M10 12.5 L20 28 L30 11" fill="none" style="stroke:var(--mark-ink)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M24.5 10.5 H30.5 V16.5" fill="none" style="stroke:var(--mark-ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="10" cy="12.5" r="2.6" style="fill:var(--mark-ink)"/></svg>
+      <span class="wordmark"><span class="logo">Vibe<span>Finance</span></span><small>Multi-agent financial intelligence</small></span>
+    </a>
     <span class="badge warn" title="All companies, prices, filings and flows are synthetic">Synthetic data</span>
     <span class="badge" id="asof"></span></div>
   <div class="users" id="users" role="group" aria-label="Investor profile"></div>
   <div class="actions">
     <button class="primary" id="run">Run analysis</button>
-    <button id="arch">Architecture</button>
+    <button id="arch" aria-label="Architecture and decision logic"><span class="arch-long">Architecture</span><span class="arch-short">Docs</span></button>
+    <div class="pal-wrap"><button class="icon" id="pal" aria-label="Colour palette" aria-haspopup="true" aria-expanded="false" title="Colour palette"><span class="pal-dot"></span></button><div class="palmenu" id="palmenu" role="menu"></div></div>
     <button class="icon" id="theme" aria-label="Switch colour theme"></button>
   </div>
 </header>
 <details class="degr" id="degr"></details>
 <nav id="tabs" role="tablist" aria-label="Sections"></nav>
+<section id="panelhead" aria-live="polite"></section>
+<div id="subnav" hidden><div class="in" id="subnavin"></div></div>
 <main id="main" aria-live="polite"></main>
+<footer>
+  <div class="in">
+    <div><a class="brand-link" href="/" aria-label="VibeFinance"><svg class="mark" viewBox="0 0 40 40" style="width:32px;height:32px" aria-hidden="true"><rect width="40" height="40" rx="11" fill="url(#vfg)"/><path d="M10 12.5 L20 28 L30 11" fill="none" style="stroke:var(--mark-ink)" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M24.5 10.5 H30.5 V16.5" fill="none" style="stroke:var(--mark-ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="10" cy="12.5" r="2.6" style="fill:var(--mark-ink)"/></svg><span class="logo">Vibe<span>Finance</span></span></a>
+      <p class="about">Six cooperating agents turn prices, filings and your own behaviour into advice that is cited, confidence-rated and personal.</p></div>
+    <div><h5>Product</h5><ul><li><a href="#" data-goto="dash">Dashboard</a></li><li><a href="#" data-goto="analysis">Stock analysis</a></li><li><a href="#" data-goto="person">Personalisation</a></li><li><a href="#" data-goto="live">Live data</a></li></ul></div>
+    <div><h5>Evidence</h5><ul><li><a href="#" data-goto="search">Filings search</a></li><li><a href="#" data-goto="eval">Evaluation &amp; metrics</a></li><li><a href="#" data-goto="risk">Portfolio risk</a></li><li><a href="#" data-goto="hist">Sessions</a></li></ul></div>
+    <div><h5>Resources</h5><ul><li><button class="lnk" id="arch2">Architecture &amp; decision logic</button></li><li><a href="/docs" target="_blank" rel="noopener">API reference</a></li><li><a href="/api/meta" target="_blank" rel="noopener">System metadata (JSON)</a></li></ul></div>
+  </div>
+  <div class="legal">All companies, prices, filings and news in the simulated mode are synthetic; live mode uses public sources. Back-test figures validate the pipeline, not real-market performance. Not investment advice.</div>
+</footer>
 <div class="modal" id="modal" role="dialog" aria-modal="true"><div class="in" id="modalin"></div></div>
 
 <script>
@@ -243,9 +333,79 @@ function skeleton(kind){
   if(kind==="eval") return kp + `<div class="grid2"><div>${skCard(6)}${skCard(5)}</div><div>${skCard(5)}${skCard(4)}</div></div>`;
   return `<div class="grid2"><div>${skCard(7)}${skCard(5)}</div><div><div class="sk block" style="margin-bottom:24px"></div>${skCard(4)}</div></div>`;
 }
+const PALETTES = {
+  sapphire:["Sapphire","#5ea0ff","#27d3f2","Trust and clarity. Classic finance blue."],
+  indigo:["Indigo","#8f9dff","#c084fc","Calm slate with a periwinkle accent."],
+  violet:["Violet","#a98bff","#f472b6","Modern fintech. Deep aubergine and pink."],
+  gold:["Graphite Gold","#dcb862","#f3d98e","Private-banking feel. Warm charcoal and champagne."]};
+function setPalette(p){
+  if(!PALETTES[p]) p = "sapphire";
+  document.documentElement.dataset.palette = p;
+  try{ localStorage.setItem("vf-palette", p); }catch(e){}
+  document.querySelectorAll(".palopt").forEach(b => { b.classList.toggle("on", b.dataset.p===p); b.setAttribute("aria-checked", b.dataset.p===p); });
+  syncThemeColor();
+}
+function syncThemeColor(){ const m=document.querySelector('meta[name=theme-color]'); if(m) m.content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || "#07101d"; }
+function buildPalMenu(){
+  $("#palmenu").innerHTML = `<h4>Colour palette</h4>` + Object.entries(PALETTES).map(([k,[n,a,b,d]]) =>
+    `<button class="palopt" role="menuitemradio" data-p="${k}"><span class="sw" style="background:linear-gradient(135deg,${a},${b})"></span><span><b>${n}</b><small>${d}</small></span></button>`).join("");
+  $("#palmenu").querySelectorAll(".palopt").forEach(b => b.onclick = () => { setPalette(b.dataset.p); closePal(); });
+  setPalette(document.documentElement.dataset.palette);
+}
+function closePal(){ $("#palmenu").classList.remove("on"); $("#pal").setAttribute("aria-expanded","false"); }
+const ICONS = {
+  dash:'<rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/>',
+  analysis:'<path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 4-6"/>',
+  person:'<circle cx="9" cy="8" r="3.2"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><path d="M16 5.5a3 3 0 0 1 0 5.8M18 14.3c2 .8 3.5 2.8 3.5 5.7"/>',
+  risk:'<path d="M12 3l8 3v6c0 4.5-3.4 7.7-8 9-4.6-1.3-8-4.5-8-9V6z"/><path d="M12 8v4.5M12 15.5v.1"/>',
+  search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  live:'<circle cx="12" cy="12" r="2.2"/><path d="M7.8 7.8a6 6 0 0 0 0 8.4M16.2 7.8a6 6 0 0 1 0 8.4M4.9 4.9a10 10 0 0 0 0 14.2M19.1 4.9a10 10 0 0 1 0 14.2"/>',
+  eval:'<path d="M5 20V10M12 20V4M19 20v-7"/>',
+  hist:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'};
+const svgIcon = k => `<svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>`;
+const PANEL = {
+  dash:["Dashboard", () => `Signals, recommendations and portfolio for ${S.res ? S.res.user.name : "your investor"}.`],
+  analysis:["Stock analysis", () => `The full reasoning chain, agent outputs and sources behind one recommendation.`],
+  person:["Personalisation", () => `Same market inputs, different advice. Compare investors and edit a profile.`],
+  risk:["Portfolio risk & alerts", () => `Where the risk really sits, how it behaves under stress, and which alerts apply to you.`],
+  search:["Filings search", () => `Semantic search across ${S.meta && S.meta.rag ? S.meta.rag.passages : "hundreds of"} filing passages in a vector database.`],
+  live:["Live data", () => `Real NSE prices, disclosures and headlines through the same six agents.`],
+  eval:["Evaluation & metrics", () => `Session metrics, back-tests, calibration and latency under load.`],
+  hist:["Sessions & changes", () => `What changed since your last visit, and the decisions you made on earlier advice.`]};
+function renderPanelHead(){
+  const [t, sub] = PANEL[S.tab];
+  const act = S.degr.size;
+  $("#panelhead").innerHTML = `<div><h1><span class="ico">${svgIcon(S.tab)}</span>${esc(t)}</h1><p>${esc(sub())}</p></div>
+    <div class="meta">${S.res?`<span class="badge">${esc(S.res.user.name)} · ${esc(S.res.recommendations[0].profile_label)}</span>`:""}${act?`<span class="badge warn">${act} data scenario${act>1?"s":""} active</span>`:""}</div>`;
+}
+let _spy = null, _subTimer = null;
+function buildSubnav(){
+  const wrap = $("#subnav"), cards = [...document.querySelectorAll("#main .card")].filter(c => c.querySelector("h3"));
+  if(_spy){ _spy.disconnect(); _spy = null; }
+  if(cards.length < 3){ wrap.hidden = true; return; }
+  const items = cards.map((c, i) => {
+    const h = c.querySelector("h3"); const first = [...h.childNodes].find(n => n.nodeType===3 && n.textContent.trim());
+    let label = (first ? first.textContent : h.textContent).trim().split(" · ")[0].replace(/\s*\(.*$/, "");
+    label = label.replace(/^[^']+'s\s+/, "").replace(/\s+for\s+.*$/, "").replace(/^Portfolio & watchlist alerts$/, "Alerts").replace(/^Alerts for .*/, "Alerts").split(":")[0].replace(/\s+vs\s+.*$/, "").replace(/\s+\(this run\)/, "");
+    label = label.charAt(0).toUpperCase() + label.slice(1);
+    if(label.length > 26) label = label.slice(0, 24).trim() + "…";
+    c.id = c.id || `sec-${S.tab}-${i}`;
+    return [c.id, label];
+  });
+  $("#subnavin").innerHTML = `<span class="lbl">On this page</span>` + items.map(([id, l]) => `<a href="#${id}" data-sec="${id}">${esc(l)}</a>`).join("");
+  wrap.hidden = false;
+  const links = [...document.querySelectorAll("#subnavin a")];
+  links.forEach(a => a.onclick = e => { e.preventDefault(); document.getElementById(a.dataset.sec).scrollIntoView({behavior:"smooth", block:"start"}); });
+  _spy = new IntersectionObserver(entries => {
+    entries.forEach(en => { if(en.isIntersecting){ links.forEach(l => l.classList.toggle("on", l.dataset.sec===en.target.id));
+      const on = links.find(l => l.classList.contains("on")); if(on) on.scrollIntoView({block:"nearest", inline:"center"}); } });
+  }, {rootMargin:"-130px 0px -65% 0px"});
+  cards.forEach(c => _spy.observe(c));
+  links[0].classList.add("on");
+}
 const ASYNC_TABS = new Set(["analysis","person","search","eval","hist"]);
 function setTheme(t){
-  document.documentElement.dataset.theme = t;
+  document.documentElement.dataset.theme = t; setTimeout(syncThemeColor, 0);
   try{ localStorage.setItem("vf-theme", t); }catch(e){}
   const b = $("#theme"); b.innerHTML = t==="dark" ? SUN : MOON; b.title = t==="dark" ? "Switch to light theme" : "Switch to dark theme";
   const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = t==="dark" ? "#0a0e16" : "#f4f6fb";
@@ -279,9 +439,15 @@ async function boot(){
   renderUsers(); renderDegr(); renderTabs();
   $("#run").onclick = () => run(); $("#arch").onclick = showArch;
   setTheme(document.documentElement.dataset.theme || "dark");
+  buildPalMenu();
+  $("#pal").onclick = e => { e.stopPropagation(); const on = $("#palmenu").classList.toggle("on"); $("#pal").setAttribute("aria-expanded", on); };
+  document.addEventListener("click", e => { if(!e.target.closest(".pal-wrap")) closePal(); const g = e.target.closest("[data-goto]"); if(g){ e.preventDefault(); S.tab = g.dataset.goto; S.animate=true; renderTabs(); render(); window.scrollTo({top:0, behavior:"smooth"}); } });
+  $("#arch2").onclick = showArch;
+  new MutationObserver(() => { clearTimeout(_subTimer); _subTimer = setTimeout(buildSubnav, 80); }).observe($("#main"), {childList:true});
+  addEventListener("scroll", () => $("#subnav").classList.toggle("stuck", scrollY > 160), {passive:true});
   $("#theme").onclick = () => setTheme(document.documentElement.dataset.theme==="light" ? "dark" : "light");
   matchMedia("(max-width:700px)").addEventListener("change", () => { if(S.res) render(); });
-  document.addEventListener("keydown", e => { if(e.key==="Escape") $("#modal").classList.remove("on"); });
+  document.addEventListener("keydown", e => { if(e.key==="Escape"){ $("#modal").classList.remove("on"); closePal(); } });
   document.addEventListener("click", e => { const t=e.target.closest("[data-src]"); if(t) openSource(t.dataset.src); if(e.target.id==="modal") $("#modal").classList.remove("on"); });
   await run();
 }
@@ -300,8 +466,9 @@ function renderDegr(){
 }
 const TABS = [["dash","Dashboard"],["analysis","Stock analysis"],["person","Personalisation"],["risk","Portfolio risk & alerts"],["search","Filings search"],["live","Live data"],["eval","Evaluation & metrics"],["hist","Sessions & changes"]];
 function renderTabs(){
-  $("#tabs").innerHTML = TABS.map(([k,l]) => `<button role="tab" aria-selected="${S.tab===k}" class="${S.tab===k?"on":""}" data-t="${k}">${l}</button>`).join("");
+  $("#tabs").innerHTML = TABS.map(([k,l]) => `<button role="tab" aria-selected="${S.tab===k}" class="${S.tab===k?"on":""}" data-t="${k}">${svgIcon(k)}<span>${l}</span></button>`).join("");
   document.querySelectorAll("[data-t]").forEach(el => el.onclick = () => { S.tab = el.dataset.t; S.animate=true; renderTabs(); render(); window.scrollTo({top:0}); el.scrollIntoView({block:"nearest",inline:"center"}); });
+  renderPanelHead();
 }
 async function run(){
   S.busy = true; $("#bar").classList.add("on"); $("#run").disabled = true;
@@ -322,6 +489,7 @@ async function run(){
 function render(){
   if(!S.res) return;
   S.rid++;
+  renderPanelHead();
   const m = $("#main"); m.classList.toggle("enter", S.animate); S.animate = false;
   if(ASYNC_TABS.has(S.tab)) m.innerHTML = skeleton(S.tab==="eval"?"eval":"x");
   ({dash:rDash, analysis:rAnalysis, person:rPerson, risk:rRisk, search:rSearch, live:rLive, eval:rEval, hist:rHist})[S.tab]();
@@ -516,7 +684,7 @@ async function rEval(){
    </div><div>
     <div class="card"><h3>Agent latency (this run)</h3><table><thead><tr><th>Agent</th><th class="num">Mean ms</th><th class="num">Max ms</th><th class="num">Usable</th></tr></thead><tbody>${pa}</tbody></table>
        <div class="small mute" style="margin-top:6px">Feeds carry simulated network latency (${Object.entries({prices:70,sentiment:95,filings:80}).map(([k,v])=>k+" "+v+"ms").join(", ")}); that is what parallelism hides.</div></div>
-    <div class="card"><h3>Confidence calibration (ensemble)</h3><table><thead><tr><th>Stated confidence</th><th class="num">n</th><th class="num">Actual hit rate</th><th></th></tr></thead><tbody>${cal}</tbody></table>
+    <div class="card"><h3>Reliability by confidence</h3><table><thead><tr><th>Stated confidence</th><th class="num">n</th><th class="num">Actual hit rate</th><th></th></tr></thead><tbody>${cal}</tbody></table>
        <div class="small mute" style="margin-top:6px">Each recommendation shows the empirical hit rate of past signals in its confidence bucket, so users see how far to trust the number.</div></div>
     <div class="card"><h3>Latency under load: sequential vs parallel agents <span class="r"><button class="sm" id="bench">Run benchmark</button></span></h3><div id="benchout" class="small mute">Runs 4 signal agents × N stocks, 3 repeats each.</div></div>
    </div></div>`;

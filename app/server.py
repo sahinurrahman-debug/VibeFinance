@@ -7,6 +7,7 @@ from pathlib import Path
 import numpy as np
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from . import config
@@ -19,6 +20,7 @@ from .market import BY_SYMBOL, SYMBOLS, UNIVERSE
 STATIC = Path(__file__).parent / "static"
 app = FastAPI(title="VibeFinance", version="1.0")
 ENGINE = build_engine()
+app.mount("/static", StaticFiles(directory=STATIC), name="static")
 
 
 def _default(o):
@@ -69,6 +71,11 @@ class DecisionReq(BaseModel):
     action: str
     choice: str          # accepted | ignored | modified
     note: str = ""
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse(STATIC / "logo.svg", media_type="image/svg+xml")
 
 
 @app.get("/")

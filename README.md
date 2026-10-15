@@ -1,4 +1,4 @@
-# VibeFinance - Multi-Agent Autonomous Financial Intelligence (PS 04)
+﻿# VibeFinance - Multi-Agent Autonomous Financial Intelligence (PS 04)
 
 Turns market data, regulatory filings and a user's behavioural history into **personalised, cited, confidence-rated**
 investment intelligence. Six specialised agents run in parallel; a synthesis layer merges them per investor.
@@ -12,7 +12,7 @@ Full design: [ARCHITECTURE.md](ARCHITECTURE.md) (also opens from the dashboard's
 ```bash
 pip install -r requirements.txt
 python run.py            # http://127.0.0.1:8000   (add --reset to re-seed the SQLite DB)
-python -m pytest -q      # 60 tests: contract, no-look-ahead, RAG + vector DB, personalisation, degraded modes, all 7 extensions
+python -m pytest -q      # 61 tests: contract, no-look-ahead, RAG + vector DB, personalisation, degraded modes, all 7 extensions
 ```
 Python 3.11+, FastAPI, NumPy, qdrant-client (embedded vector DB), requests. Simulated mode needs no keys and no network and is fully reproducible (seed 42); the *Live data* tab uses the public internet.
 
@@ -44,6 +44,13 @@ Python 3.11+, FastAPI, NumPy, qdrant-client (embedded vector DB), requests. Simu
 | 6 | Persistent sessions: snapshots, diffs, recommendation flips, behavioural drift, decision follow-through | *Sessions & changes* tab, `timeline.py` |
 | 7 | Parallel optimisation: single-flight cache, queue-aware deadlines, concurrent-user and pool-size benchmarks | *Evaluation* tab (Run benchmark), `runcache.py` |
 
+## Look and feel
+
+Logo (`app/static/logo.svg`, also the favicon): a "V" whose right stroke ends in a rising arrow, on an accent gradient. Four colour palettes can be switched live from the header
+(**Sapphire** default, **Indigo**, **Violet**, **Graphite Gold**), each with a dark and a light variant; green, red and amber stay reserved for gain, loss and caution.
+Every page has a panel header and an auto-built "On this page" sub-navigation that follows your scroll; the tab bar stays pinned; a footer links the docs and API reference.
+Choices are remembered per browser.
+
 ## Layout
 
 ```
@@ -67,6 +74,7 @@ app/server.py      FastAPI API                 app/static/index.html  dashboard
 | Multi-agent + synthesis | `engine.run_agents` (parallel, timeout, contract), `synthesis.py` |
 | Retrieval & attribution | `rag.py`, `FilingsAgent`, clickable verified citations, document viewer |
 | Personalisation & risk | `/api/compare`, profile editor, risk gate, behaviour guard |
-| Engineering & reliability | degradation toggles, isolation, SQLite, deterministic seed, 60 tests |
+| Engineering & reliability | degradation toggles, isolation, SQLite, deterministic seed, 61 tests |
 | Performance & evaluation | session metrics, back-test + calibration, latency benchmark |
 | Explainability & relevance | reasoning chain, disagreement explanation, plain-language actions with sizing |
+

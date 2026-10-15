@@ -331,3 +331,20 @@ def test_live_endpoint_validates_tickers():
     c = TestClient(app)
     assert c.post("/api/live", json={"user_id": "asha", "tickers": ["bad ticker!"]}).status_code == 400
     assert c.post("/api/live", json={"user_id": "ghost", "tickers": ["TCS"]}).status_code in (404, 200)
+
+
+# ====================================================================== branding / front-end shell
+def test_logo_favicon_and_page_shell():
+    from fastapi.testclient import TestClient
+    from app.server import app
+    c = TestClient(app)
+    logo = c.get("/static/logo.svg")
+    assert logo.status_code == 200 and logo.headers["content-type"].startswith("image/svg+xml") and "<svg" in logo.text
+    assert c.get("/favicon.ico").headers["content-type"].startswith("image/svg+xml")
+    html = c.get("/").text
+    assert 'rel="icon"' in html and "/static/logo.svg" in html
+    assert "<title>VibeFinance" in html and 'name="description"' in html
+    for needle in ('id="panelhead"', 'id="subnav"', "<footer>", 'id="palmenu"', 'data-palette'):
+        assert needle in html
+    for p in ("sapphire", "indigo", "violet", "gold"):
+        assert f"data-palette={p}" in html or p == "indigo"
