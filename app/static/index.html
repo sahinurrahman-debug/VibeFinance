@@ -3,97 +3,216 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0a0e16">
+<script>(function(){var t=null;try{t=localStorage.getItem("vf-theme")}catch(e){}if(!t)t=matchMedia("(prefers-color-scheme: light)").matches?"light":"dark";document.documentElement.dataset.theme=t})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <title>VibeFinance - Multi-Agent Financial Intelligence</title>
 <style>
-:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--line:#2a3342;--text:#e6edf3;--mute:#8b98a9;--pos:#2ea36b;--pos-bg:#12301f;--neg:#e5534b;--neg-bg:#3a1a1a;--neu:#8b98a9;--neu-bg:#222a36;--acc:#5b9cf5;--warn:#e3a008;--warn-bg:#3a2e0b;--mark:#5b4a00}
-:root[data-theme=light]{--bg:#f4f6f9;--panel:#fff;--panel2:#f0f3f7;--line:#d8dee7;--text:#16202c;--mute:#5d6b7c;--pos:#13824f;--pos-bg:#dff5e9;--neg:#c9342c;--neg-bg:#fde5e3;--neu:#5d6b7c;--neu-bg:#e8ecf2;--acc:#1f6fd6;--warn:#a06a00;--warn-bg:#fff2cf;--mark:#fff0a0}
+/* ============ Design tokens ============ */
+:root{
+  --font:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;     /* family 1: UI text */
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;  /* family 2: IDs, source tags */
+  --s1:4px;--s2:8px;--s3:12px;--s4:16px;--s5:24px;--s6:32px;--s7:48px;     /* spacing scale */
+  --r:14px;--r-sm:10px;--ease:cubic-bezier(.2,.7,.2,1);
+  color-scheme:dark;
+  /* one brand accent + three semantic colours + neutrals */
+  --bg:#0a0e16;--surface:#111827;--surface2:#172033;--line:#243049;--text:#e9eef7;--mute:#9aa7bf;
+  --accent:#8f9dff;--accent-ink:#0a0e16;
+  --pos:#3dd9a0;--pos-bg:rgba(61,217,160,.13);--neg:#ff7a8c;--neg-bg:rgba(255,122,140,.13);--warn:#fbc34a;--warn-bg:rgba(251,195,74,.13);
+  --neu:#9aa7bf;--neu-bg:rgba(154,167,191,.14);--mark:rgba(251,195,74,.35);--shadow:0 6px 24px rgba(0,0,0,.35);
+  /* aliases used by inline styles in the scripts below */
+  --panel:var(--surface);--panel2:var(--surface2);--acc:var(--accent);
+}
+:root[data-theme=light]{
+  color-scheme:light;
+  --bg:#f4f6fb;--surface:#ffffff;--surface2:#eef1f8;--line:#d9dfec;--text:#101828;--mute:#51607a;
+  --accent:#4338ca;--accent-ink:#ffffff;
+  --pos:#047857;--pos-bg:#dcf5ea;--neg:#be123c;--neg-bg:#fde4e8;--warn:#92580a;--warn-bg:#fdf0cf;
+  --neu:#51607a;--neu-bg:#e7ebf4;--mark:#fde68a;--shadow:0 6px 24px rgba(16,24,40,.10);
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:20}
-.logo{font-weight:700;font-size:18px;letter-spacing:.2px}.logo span{color:var(--acc)}
-.badge{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
-.badge.warn{color:var(--warn);border-color:var(--warn);background:var(--warn-bg)}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:400 1rem/1.55 var(--font);font-variant-numeric:tabular-nums;transition:background .25s,color .25s}
+h1,h2,h3,h4{margin:0}
+a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+
+/* ============ Type scale: label 12.5 / small 14 / body 16 / title 15-600 / metric 24-700 ============ */
+.small{font-size:.875rem}.mute{color:var(--mute)}.pos{color:var(--pos)}.neg{color:var(--neg)}
+.l,th{font-size:.78rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);font-weight:600}
+
+/* ============ Header / nav ============ */
+header{display:flex;flex-wrap:wrap;align-items:center;gap:var(--s3) var(--s5);padding:var(--s3) var(--s5);background:var(--surface);border-bottom:1px solid var(--line)}   /* header scrolls away; the tab bar below stays pinned */
+.brand{display:flex;align-items:center;gap:var(--s3);flex-wrap:wrap}
+.logo{font-weight:700;font-size:1.3rem;letter-spacing:-.01em}.logo span{color:var(--accent)}
+.badge{display:inline-block;font-size:.78rem;font-weight:500;padding:2px 10px;border-radius:99px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.badge.warn{color:var(--warn);border-color:transparent;background:var(--warn-bg)}
 .sp{flex:1}
+.users{display:flex;gap:var(--s2);flex:1;min-width:0;overflow-x:auto;scroll-snap-type:x proximity;padding:2px;scrollbar-width:none}
+.users::-webkit-scrollbar{display:none}
+.user{flex:0 0 auto;scroll-snap-align:start;padding:var(--s2) var(--s4);border-radius:var(--r-sm);border:1px solid var(--line);background:var(--surface2);cursor:pointer;text-align:left;transition:border-color .15s,transform .15s,box-shadow .15s}
+.user:hover{border-color:var(--accent);transform:translateY(-1px)}
+.user.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset;background:color-mix(in srgb,var(--accent) 10%,var(--surface2))}
+.user b{display:block;font-weight:600}.user small{display:block;color:var(--mute);font-size:.8rem}
+.actions{display:flex;gap:var(--s2);align-items:center}
 button,select,input{font:inherit;color:var(--text)}
-button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
-button:hover{border-color:var(--acc)}button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
-button.sm{padding:2px 8px;font-size:12px}
-.users{display:flex;gap:6px}
-.user{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;text-align:left}
-.user.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
-.user small{display:block;color:var(--mute);font-size:11px}
-.degr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--line);background:var(--panel2);font-size:12px}
-.degr label{display:flex;gap:5px;align-items:center;padding:3px 8px;border:1px dashed var(--line);border-radius:99px;cursor:pointer}
-.degr label.on{border-color:var(--warn);background:var(--warn-bg);color:var(--warn)}
-nav{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--panel);overflow-x:auto}
-nav button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:10px 14px;color:var(--mute);white-space:nowrap}
-nav button.on{color:var(--text);border-bottom-color:var(--acc)}
-main{padding:16px 20px;max-width:1500px;margin:0 auto}
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
-.kpi .v{font-size:20px;font-weight:650}.kpi .l{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.4px}.kpi .s{color:var(--mute);font-size:11px}
-.grid2{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px}
-.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
-@media(max-width:1100px){.grid2,.grid3{grid-template-columns:1fr}}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;min-width:0}
-.card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--mute);display:flex;align-items:center;gap:8px}
-.card h3 .r{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400}
-table{width:100%;border-collapse:collapse}th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
-th{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
-tr.click{cursor:pointer}tr.click:hover td{background:var(--panel2)}tr.sel td{background:var(--panel2)}
+button{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s2) var(--s4);min-height:40px;cursor:pointer;font-weight:500;transition:transform .15s var(--ease),border-color .15s,box-shadow .15s,background .15s}
+button:hover{border-color:var(--accent);transform:translateY(-1px);box-shadow:var(--shadow)}
+button:active{transform:translateY(0) scale(.98)}
+button:disabled{opacity:.55;cursor:progress;transform:none;box-shadow:none}
+button.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+button.sm{padding:2px var(--s3);min-height:34px;font-size:.875rem}
+button.icon{width:40px;padding:0;display:grid;place-items:center}
+button.icon svg{width:20px;height:20px;transition:transform .35s var(--ease)}button.icon:hover svg{transform:rotate(25deg)}
+
+details.degr{background:var(--surface2);border-bottom:1px solid var(--line);padding:0 var(--s5)}
+details.degr summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:var(--s3);padding:var(--s3) 0;font-weight:600;font-size:.9rem}
+details.degr summary::-webkit-details-marker{display:none}
+details.degr summary:after{content:"";width:8px;height:8px;border-right:2px solid var(--mute);border-bottom:2px solid var(--mute);transform:rotate(45deg);margin-left:auto;transition:transform .2s var(--ease)}
+details.degr[open] summary:after{transform:rotate(-135deg)}
+details.degr .opts{display:flex;flex-wrap:wrap;gap:var(--s2);padding-bottom:var(--s3);align-items:center}
+details.degr label{display:flex;gap:6px;align-items:center;padding:6px 12px;min-height:36px;border:1px dashed var(--line);border-radius:99px;cursor:pointer;font-size:.875rem;transition:background .15s,border-color .15s}
+details.degr label:hover{border-color:var(--warn)}
+details.degr label.on{border:1px solid var(--warn);background:var(--warn-bg);color:var(--warn)}
+nav{display:flex;gap:2px;padding:0 var(--s5);border-bottom:1px solid var(--line);background:var(--surface);overflow-x:auto;scrollbar-width:none;position:sticky;top:0;z-index:20}
+nav::-webkit-scrollbar{display:none}
+nav button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:var(--s3) var(--s4);min-height:48px;color:var(--mute);white-space:nowrap;font-weight:500;box-shadow:none}
+nav button:hover{color:var(--text);transform:none;box-shadow:none}
+nav button.on{color:var(--text);border-bottom-color:var(--accent)}
+#bar{position:fixed;left:0;top:0;height:3px;width:100%;z-index:60;background:linear-gradient(90deg,transparent,var(--accent),transparent);background-size:40% 100%;background-repeat:no-repeat;opacity:0;transition:opacity .2s}
+#bar.on{opacity:1;animation:slide 1s linear infinite}
+@keyframes slide{from{background-position:-40% 0}to{background-position:140% 0}}
+
+/* ============ Layout ============ */
+main{padding:var(--s5);max-width:1400px;margin:0 auto;min-height:60vh}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:var(--s4);margin-bottom:var(--s5)}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s4)}
+.kpi .l{margin-bottom:var(--s1)}.kpi .v{font-size:1.5rem;font-weight:700;line-height:1.2;letter-spacing:-.01em}.kpi .s{color:var(--mute);font-size:.8rem;margin-top:2px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:var(--s5)}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s4)}
+@media(max-width:1100px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+.grid2>*,.grid3>*{min-width:0}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s5);margin-bottom:var(--s5);min-width:0;overflow-x:auto;scrollbar-width:thin}
+.card h3{display:flex;align-items:center;flex-wrap:wrap;gap:var(--s2) var(--s3);margin:0 0 var(--s4);font-size:.95rem;font-weight:600;color:var(--text)}
+.card h3 .r{margin-left:auto;font-weight:400;font-size:.8rem;color:var(--mute);text-align:right}
+
+/* ============ Tables ============ */
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{padding:var(--s3);text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tr.click{cursor:pointer}tr.click td{transition:background .15s}tr.click:hover td{background:var(--surface2)}tr.sel td{background:var(--surface2)}
 .num{text-align:right;font-variant-numeric:tabular-nums}
-.chip{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap}
+
+/* ============ Chips, bars ============ */
+.chip{display:inline-block;padding:3px 10px;border-radius:8px;font-size:.82rem;font-weight:600;white-space:nowrap}
 .chip.pos{background:var(--pos-bg);color:var(--pos)}.chip.neg{background:var(--neg-bg);color:var(--neg)}.chip.neu{background:var(--neu-bg);color:var(--neu)}
 .chip.warn{background:var(--warn-bg);color:var(--warn)}.chip.na{background:transparent;color:var(--mute);border:1px dashed var(--line)}
-.chip.deg{outline:1px dashed var(--warn)}
-.cbar{height:4px;background:var(--line);border-radius:3px;margin-top:3px;width:70px}.cbar i{display:block;height:100%;border-radius:3px;background:var(--acc)}
-.div{position:relative;height:8px;background:var(--line);border-radius:4px;margin:4px 0}.div:before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--mute)}
+.chip.deg{outline:1px dashed var(--warn);outline-offset:1px}
+.cbar{height:4px;background:var(--line);border-radius:3px;margin-top:6px;width:72px;overflow:hidden}.cbar i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.hbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;min-width:60px}.hbar i{display:block;height:100%;background:var(--accent);border-radius:4px}
+.div{position:relative;height:8px;background:var(--line);border-radius:4px;margin:6px 0}.div:before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--mute)}
 .div i{position:absolute;top:0;bottom:0;border-radius:4px}
-.mute{color:var(--mute)}.small{font-size:12px}.pos{color:var(--pos)}.neg{color:var(--neg)}
-.src{display:inline-block;font-size:11px;padding:0 6px;margin:1px 2px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);color:var(--acc);cursor:pointer;font-family:ui-monospace,Consolas,monospace}
-.src:hover{border-color:var(--acc)}
-.chain{border-left:2px solid var(--line);margin-left:6px;padding-left:16px}
-.step{position:relative;margin-bottom:12px}.step:before{content:"";position:absolute;left:-23px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--acc)}
-.step b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--mute)}
-.agentcard{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2)}
-.agentcard h4{margin:0 0 4px;font-size:13px;display:flex;gap:6px;align-items:center}
-.agentcard ul{margin:6px 0 0;padding-left:16px}.agentcard li{margin:3px 0;font-size:12.5px}
-.alert{padding:7px 10px;border-radius:8px;margin-bottom:6px;font-size:13px;border-left:3px solid var(--warn);background:var(--panel2)}
-.alert.high{border-left-color:var(--neg)}.alert.medium{border-left-color:var(--warn)}
-.box{border:1px solid var(--warn);background:var(--warn-bg);color:var(--text);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13px}
-.box.info{border-color:var(--acc);background:var(--panel2)}
-.hbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;min-width:60px}.hbar i{display:block;height:100%;background:var(--acc)}
-.gantt{position:relative;font-size:12px}.grow{display:flex;align-items:center;gap:8px;margin:3px 0}.grow .n{width:80px;color:var(--mute)}.grow .t{position:relative;flex:1;height:14px;background:var(--panel2);border-radius:3px}.grow .t i{position:absolute;top:1px;bottom:1px;border-radius:3px;background:var(--acc);min-width:2px}
-.grow .t i.degraded{background:var(--warn)}.grow .t i.failed,.grow .t i.timeout,.grow .t i.abstained{background:var(--neg)}
-.stage{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}.stage .ms{width:70px;text-align:right;font-variant-numeric:tabular-nums;color:var(--acc)}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
-.modal.on{display:flex}.modal .in{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:820px;width:100%;max-height:88vh;overflow:auto;padding:18px}
-mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
-.doc h4{margin:14px 0 4px}.doc p{margin:0}.doc .sec{padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-top:8px}
-pre.md{white-space:pre-wrap;font:12.5px/1.5 ui-monospace,Consolas,monospace}
-input[type=range]{width:100%}.field{margin:10px 0}.field label{display:flex;justify-content:space-between;color:var(--mute);font-size:12px}
-input[type=number],select{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
-.loading{opacity:.5;pointer-events:none}
-.hidden{display:none}
+.src{display:inline-block;font:500 .75rem var(--mono);padding:1px 8px;margin:2px;border-radius:6px;background:var(--surface2);border:1px solid var(--line);color:var(--accent);cursor:pointer;transition:border-color .15s}
+.src:hover{border-color:var(--accent)}
 .spark{vertical-align:middle}
-.quote{border-left:3px solid var(--acc);padding:4px 10px;margin:6px 0;background:var(--panel2);border-radius:0 6px 6px 0;font-size:12.5px}
+
+/* ============ Reasoning, agents, alerts ============ */
+.chain{border-left:2px solid var(--line);margin-left:6px;padding-left:var(--s5)}
+.step{position:relative;margin-bottom:var(--s4)}.step:before{content:"";position:absolute;left:-31px;top:7px;width:10px;height:10px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px var(--surface)}
+.step b{display:block;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em;color:var(--mute)}
+.agentcard{border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s4);background:var(--surface2)}
+.agentcard h4{margin:0 0 var(--s1);font-size:.95rem;display:flex;gap:var(--s2);align-items:center;flex-wrap:wrap}
+.agentcard ul{margin:var(--s2) 0 0;padding-left:18px}.agentcard li{margin:4px 0;font-size:.9rem}
+.alert{padding:var(--s3) var(--s4);border-radius:var(--r-sm);margin-bottom:var(--s2);font-size:.95rem;border-left:3px solid var(--warn);background:var(--surface2)}
+.alert.high{border-left-color:var(--neg)}.alert.medium{border-left-color:var(--warn)}
+.box{border:1px solid var(--warn);background:var(--warn-bg);border-radius:var(--r-sm);padding:var(--s3) var(--s4);margin:var(--s3) 0;font-size:.95rem}
+.box.info{border-color:var(--line);background:var(--surface2)}
+.quote{border-left:3px solid var(--accent);padding:var(--s2) var(--s4);margin:var(--s3) 0;background:var(--surface2);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:.95rem}
+.gantt{font-size:.875rem}.grow{display:flex;align-items:center;gap:var(--s2);margin:5px 0}.grow .n{width:84px;color:var(--mute)}.grow .t{position:relative;flex:1;height:14px;background:var(--surface2);border-radius:4px}.grow .t i{position:absolute;top:1px;bottom:1px;border-radius:4px;background:var(--accent);min-width:2px}
+.grow .t i.degraded{background:var(--warn)}.grow .t i.failed,.grow .t i.timeout,.grow .t i.abstained{background:var(--neg)}
+.stage{display:flex;gap:var(--s3);padding:var(--s2) 0;border-bottom:1px solid var(--line)}.stage .ms{width:76px;text-align:right;color:var(--accent);font-weight:600}
+mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
+pre.md{white-space:pre-wrap;font:.85rem/1.6 var(--mono)}
+.field{margin:var(--s4) 0}.field label{display:flex;justify-content:space-between;gap:var(--s3);color:var(--mute);font-size:.875rem;margin-bottom:var(--s1)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=number],input[type=date],input[type=text],input:not([type]),select{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s2) var(--s3);min-height:40px;font-size:1rem}
+input[type=checkbox]{accent-color:var(--accent);width:18px;height:18px}
+.hidden{display:none}
+
+/* ============ Modal / bottom sheet ============ */
+.modal{position:fixed;inset:0;background:rgba(5,8,14,.62);display:none;align-items:center;justify-content:center;z-index:80;padding:var(--s5);backdrop-filter:blur(3px)}
+.modal.on{display:flex;animation:fade .2s ease-out}
+.modal .in{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);max-width:840px;width:100%;max-height:88vh;overflow:auto;padding:var(--s5);animation:pop .28s var(--ease)}
+.doc h4{margin:var(--s4) 0 var(--s1)}.doc p{margin:0}.doc .sec{padding:var(--s3) var(--s4);border:1px solid var(--line);border-radius:var(--r-sm);margin-top:var(--s3)}
+
+/* ============ Loading & empty states ============ */
+.sk{background:linear-gradient(90deg,var(--surface2) 25%,var(--line) 37%,var(--surface2) 63%);background-size:400% 100%;animation:shimmer 1.4s ease infinite;border-radius:var(--r-sm)}
+.sk.kpi-sk{height:92px;border-radius:var(--r)}.sk.line{height:14px;margin:12px 0}.sk.line.w60{width:60%}.sk.line.w40{width:40%}.sk.block{height:220px;border-radius:var(--r)}
+.sk-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:var(--s5);margin-bottom:var(--s5)}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:var(--s2);padding:var(--s6) var(--s4);color:var(--mute)}
+.empty svg{width:44px;height:44px;stroke:var(--mute);opacity:.8;margin-bottom:var(--s1)}
+.empty b{color:var(--text);font-size:1rem}.empty span{font-size:.9rem;max-width:34ch}.empty button{margin-top:var(--s2)}
+.busy{opacity:.55;transition:opacity .2s}
+
+/* ============ Motion (purposeful, short, transform/opacity only) ============ */
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes pop{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes shimmer{from{background-position:100% 0}to{background-position:-100% 0}}
+main.enter>*{animation:rise .38s var(--ease) both}
+main.enter>*:nth-child(2){animation-delay:50ms}main.enter>*:nth-child(3){animation-delay:100ms}main.enter>*:nth-child(4){animation-delay:150ms}main.enter>*:nth-child(n+5){animation-delay:200ms}
+main.enter .grid2>div>.card,main.enter .grid3>*{animation:rise .4s var(--ease) both}
+main.enter .grid2>div>.card:nth-child(2){animation-delay:80ms}main.enter .grid2>div>.card:nth-child(n+3){animation-delay:140ms}
+main.enter .cbar i,main.enter .hbar i,main.enter .div i{transform-origin:left;animation:grow .7s var(--ease) both .15s}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* ============ Responsive ============ */
+@media(max-width:1400px){.users{order:3;flex:1 1 100%}.actions{margin-left:auto}}
+@media(max-width:900px){
+  header{padding:var(--s3) var(--s4)}.users{order:3;flex:1 1 100%}.actions{margin-left:auto}
+  main{padding:var(--s4)}nav{padding:0 var(--s2)}details.degr{padding:0 var(--s4)}
+  .card{padding:var(--s4);margin-bottom:var(--s4)}.grid2{gap:var(--s4)}
+}
+@media(max-width:700px){
+  .brand{flex:1 1 100%;gap:var(--s2)}.actions{flex:1 1 100%}.actions .primary{flex:1}.actions #arch{padding:0 var(--s3)}
+  button{min-height:44px}button.sm{min-height:40px}
+  .kpis{grid-template-columns:repeat(2,1fr);gap:var(--s3)}.kpi{padding:var(--s3)}.kpi .v{font-size:1.25rem}
+  .card h3 .r{margin-left:0;text-align:left;flex-basis:100%}
+  .user{min-width:168px}
+  /* the 8-column signals table becomes one card per stock */
+  table.cards thead{display:none}
+  table.cards tbody{display:block}
+  table.cards tr{display:grid;grid-template-columns:1fr 1fr;gap:var(--s3) var(--s4);padding:var(--s4);border:1px solid var(--line);border-radius:var(--r-sm);margin-bottom:var(--s3);background:var(--surface2)}
+  table.cards td{display:block;border:0;padding:0;background:none!important}
+  table.cards td:first-child{grid-column:1/-1}
+  table.cards td[data-l]:before{content:attr(data-l);display:block;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+  .modal{padding:0;align-items:flex-end}.modal .in{max-height:92vh;border-radius:var(--r) var(--r) 0 0;animation:sheet .3s var(--ease)}
+  .grow .n{width:64px}
+}
+@keyframes sheet{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+
+@media(max-width:700px){table.cards td.num{text-align:left}table.cards .chip,.agentcard .chip,.alert .chip{white-space:normal}}
 </style>
 </head>
 <body>
+<div id="bar" aria-hidden="true"></div>
 <header>
-  <div class="logo">Vibe<span>Finance</span></div>
-  <span class="badge warn" title="All companies, prices, filings and flows are synthetic">SYNTHETIC DATA</span>
-  <span class="badge" id="asof"></span>
-  <div class="sp"></div>
-  <div class="users" id="users"></div>
-  <button class="primary" id="run">Run analysis</button>
-  <button class="sm" id="arch">Architecture</button>
-  <button class="sm" id="theme">Theme</button>
+  <div class="brand"><div class="logo">Vibe<span>Finance</span></div>
+    <span class="badge warn" title="All companies, prices, filings and flows are synthetic">Synthetic data</span>
+    <span class="badge" id="asof"></span></div>
+  <div class="users" id="users" role="group" aria-label="Investor profile"></div>
+  <div class="actions">
+    <button class="primary" id="run">Run analysis</button>
+    <button id="arch">Architecture</button>
+    <button class="icon" id="theme" aria-label="Switch colour theme"></button>
+  </div>
 </header>
-<div class="degr" id="degr"></div>
-<nav id="tabs"></nav>
-<main id="main"></main>
-<div class="modal" id="modal"><div class="in" id="modalin"></div></div>
+<details class="degr" id="degr"></details>
+<nav id="tabs" role="tablist" aria-label="Sections"></nav>
+<main id="main" aria-live="polite"></main>
+<div class="modal" id="modal" role="dialog" aria-modal="true"><div class="in" id="modalin"></div></div>
 
 <script>
 "use strict";
@@ -108,7 +227,31 @@ const ACT = {BUY:"pos",ACCUMULATE:"pos",HOLD:"neu",WATCH:"neu",TRIM:"neg",SELL:"
 const AGENTS = ["momentum","volume","sentiment","filings"];
 const ANAME = {momentum:"Momentum",volume:"Volume anomaly",sentiment:"Sentiment & flows",filings:"Filings (RAG)",risk:"Portfolio risk",behavior:"Behaviour"};
 
-const S = {rid:0, meta:null, user:"asha", degr:new Set(), res:null, sym:null, tab:"dash", compare:null, bench:null, prices:{}, busy:false};
+const SUN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>';
+const MOON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg>';
+const EMPTY_ICON = {
+  ok:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16 9.5"/>', search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/>',
+  globe:'<circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18"/>', clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  list:'<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 9h8M8 13h8M8 17h5"/>', warn:'<path d="M12 3l9.5 17h-19z"/><path d="M12 10v4.5M12 17.5v.1"/>'};
+function empty(icon, title, hint, btn){
+  return `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">${EMPTY_ICON[icon]||EMPTY_ICON.list}</svg><b>${esc(title)}</b><span>${esc(hint)}</span>${btn?`<button class="primary" ${btn[1]}>${esc(btn[0])}</button>`:""}</div>`;
+}
+const skCard = (lines=4) => `<div class="sk-card"><div class="sk line w40"></div>${'<div class="sk line"></div>'.repeat(lines)}<div class="sk line w60"></div></div>`;
+function skeleton(kind){
+  const kp = '<div class="kpis">' + '<div class="sk kpi-sk"></div>'.repeat(6) + '</div>';
+  if(kind==="dash") return kp + `<div class="grid2"><div>${skCard(8)}${skCard(5)}</div><div>${skCard(4)}${skCard(6)}</div></div>`;
+  if(kind==="eval") return kp + `<div class="grid2"><div>${skCard(6)}${skCard(5)}</div><div>${skCard(5)}${skCard(4)}</div></div>`;
+  return `<div class="grid2"><div>${skCard(7)}${skCard(5)}</div><div><div class="sk block" style="margin-bottom:24px"></div>${skCard(4)}</div></div>`;
+}
+const ASYNC_TABS = new Set(["analysis","person","search","eval","hist"]);
+function setTheme(t){
+  document.documentElement.dataset.theme = t;
+  try{ localStorage.setItem("vf-theme", t); }catch(e){}
+  const b = $("#theme"); b.innerHTML = t==="dark" ? SUN : MOON; b.title = t==="dark" ? "Switch to light theme" : "Switch to dark theme";
+  const m = document.querySelector('meta[name=theme-color]'); if(m) m.content = t==="dark" ? "#0a0e16" : "#f4f6fb";
+}
+const CW = () => Math.max(300, Math.min(620, innerWidth - 64));
+const S = {animate:true, degrOpen: false, rid:0, meta:null, user:"asha", degr:new Set(), res:null, sym:null, tab:"dash", compare:null, bench:null, prices:{}, busy:false};
 
 async function api(path, opts){
   const r = await fetch(path, opts && {method:opts.method||"POST", headers:{"content-type":"application/json"}, body: JSON.stringify(opts.body)});
@@ -130,42 +273,59 @@ function actionChip(a){return `<span class="chip ${ACT[a]}">${a}</span>`}
 
 /* ---------- boot ---------- */
 async function boot(){
+  $("#main").innerHTML = skeleton("dash"); $("#theme").innerHTML = SUN;
   S.meta = await api("/api/meta");
   $("#asof").textContent = "as of " + S.meta.as_of;
   renderUsers(); renderDegr(); renderTabs();
-  $("#run").onclick = run; $("#arch").onclick = showArch;
-  $("#theme").onclick = () => { const r=document.documentElement; r.dataset.theme = r.dataset.theme==="light"?"dark":"light"; };
+  $("#run").onclick = () => run(); $("#arch").onclick = showArch;
+  setTheme(document.documentElement.dataset.theme || "dark");
+  $("#theme").onclick = () => setTheme(document.documentElement.dataset.theme==="light" ? "dark" : "light");
+  matchMedia("(max-width:700px)").addEventListener("change", () => { if(S.res) render(); });
+  document.addEventListener("keydown", e => { if(e.key==="Escape") $("#modal").classList.remove("on"); });
   document.addEventListener("click", e => { const t=e.target.closest("[data-src]"); if(t) openSource(t.dataset.src); if(e.target.id==="modal") $("#modal").classList.remove("on"); });
   await run();
 }
 function renderUsers(){
-  $("#users").innerHTML = S.meta.users.map(u => `<div class="user ${u.id===S.user?"on":""}" data-u="${u.id}"><b>${esc(u.name)}</b><small>risk ${u.risk_tolerance}/10 · max pos ${u.max_position_pct}% · ${u.horizon_years}y</small></div>`).join("");
-  document.querySelectorAll(".user").forEach(el => el.onclick = () => { S.user = el.dataset.u; S.compare=null; renderUsers(); run(); });
+  $("#users").innerHTML = S.meta.users.map(u => `<button class="user ${u.id===S.user?"on":""}" data-u="${u.id}" aria-pressed="${u.id===S.user}"><b>${esc(u.name)}</b><small>risk ${u.risk_tolerance}/10 · max position ${u.max_position_pct}%</small></button>`).join("");
+  document.querySelectorAll(".user").forEach(el => el.onclick = () => { S.user = el.dataset.u; S.compare=null; S.animate=true; renderUsers(); run(); });
 }
 function renderDegr(){
-  $("#degr").innerHTML = `<b>Degraded-data scenarios:</b>` + Object.entries(S.meta.degradations).map(([k,v]) =>
-    `<label class="${S.degr.has(k)?"on":""}" title="${esc(v)}"><input type="checkbox" data-d="${k}" ${S.degr.has(k)?"checked":""}> ${k.replace(/_/g," ")}</label>`).join("")
-    + `<span class="mute">toggle to inject a failure; the pipeline must still return cited output</span>`;
-  document.querySelectorAll("[data-d]").forEach(el => el.onchange = () => { el.checked?S.degr.add(el.dataset.d):S.degr.delete(el.dataset.d); S.compare=null; renderDegr(); run(); });
+  const n = S.degr.size, d = $("#degr");
+  d.innerHTML = `<summary>Degraded-data scenarios ${n?`<span class="badge warn">${n} active</span>`:`<span class="badge">none active</span>`}</summary><div class="opts">`
+    + Object.entries(S.meta.degradations).map(([k,v]) =>
+      `<label class="${S.degr.has(k)?"on":""}" title="${esc(v)}"><input type="checkbox" data-d="${k}" ${S.degr.has(k)?"checked":""}> ${k.replace(/_/g," ")}</label>`).join("")
+    + `<span class="mute small">Inject a failure; the pipeline must still return cited output.</span></div>`;
+  d.open = S.degrOpen; d.ontoggle = () => { S.degrOpen = d.open; };
+  d.querySelectorAll("[data-d]").forEach(el => el.onchange = () => { el.checked?S.degr.add(el.dataset.d):S.degr.delete(el.dataset.d); S.compare=null; renderDegr(); run(); });
 }
 const TABS = [["dash","Dashboard"],["analysis","Stock analysis"],["person","Personalisation"],["risk","Portfolio risk & alerts"],["search","Filings search"],["live","Live data"],["eval","Evaluation & metrics"],["hist","Sessions & changes"]];
 function renderTabs(){
-  $("#tabs").innerHTML = TABS.map(([k,l]) => `<button class="${S.tab===k?"on":""}" data-t="${k}">${l}</button>`).join("");
-  document.querySelectorAll("[data-t]").forEach(el => el.onclick = () => { S.tab = el.dataset.t; renderTabs(); render(); });
+  $("#tabs").innerHTML = TABS.map(([k,l]) => `<button role="tab" aria-selected="${S.tab===k}" class="${S.tab===k?"on":""}" data-t="${k}">${l}</button>`).join("");
+  document.querySelectorAll("[data-t]").forEach(el => el.onclick = () => { S.tab = el.dataset.t; S.animate=true; renderTabs(); render(); window.scrollTo({top:0}); el.scrollIntoView({block:"nearest",inline:"center"}); });
 }
 async function run(){
-  S.busy = true; $("#main").classList.add("loading");
+  S.busy = true; $("#bar").classList.add("on"); $("#run").disabled = true;
+  if(S.res) $("#main").classList.add("busy"); else $("#main").innerHTML = skeleton("dash");
+  let failed = null;
   try {
     S.res = await api("/api/analyze", {body:{user_id:S.user, degradations:[...S.degr]}});
     if(!S.sym || !S.res.recommendations.find(r=>r.symbol===S.sym)) S.sym = S.res.recommendations[0].symbol;
-  } catch(e){ $("#main").innerHTML = `<div class="box">Request failed: ${esc(e.message)}</div>`; }
-  S.busy = false; $("#main").classList.remove("loading"); render();
+  } catch(e){ failed = e; }
+  S.busy = false; $("#bar").classList.remove("on"); $("#run").disabled = false; $("#main").classList.remove("busy");
+  if(failed && !S.res){
+    $("#main").innerHTML = `<div class="card">${empty("warn","Couldn't load the analysis", failed.message.slice(0,160), ["Try again","id=retry"])}</div>`;
+    $("#retry").onclick = () => run(); return;
+  }
+  if(failed) $("#main").insertAdjacentHTML("afterbegin", `<div class="box">Refresh failed: ${esc(failed.message.slice(0,160))}. Showing the previous result.</div>`);
+  else render();
 }
 function render(){
   if(!S.res) return;
   S.rid++;
+  const m = $("#main"); m.classList.toggle("enter", S.animate); S.animate = false;
+  if(ASYNC_TABS.has(S.tab)) m.innerHTML = skeleton(S.tab==="eval"?"eval":"x");
   ({dash:rDash, analysis:rAnalysis, person:rPerson, risk:rRisk, search:rSearch, live:rLive, eval:rEval, hist:rHist})[S.tab]();
-  document.querySelectorAll("[data-sym]").forEach(el => el.onclick = () => { S.sym = el.dataset.sym; if(el.dataset.go){S.tab=el.dataset.go; renderTabs();} S.compare=null; render(); });
+  document.querySelectorAll("[data-sym]").forEach(el => el.onclick = () => { S.sym = el.dataset.sym; if(el.dataset.go){S.tab=el.dataset.go; renderTabs();} S.compare=null; S.animate=true; render(); window.scrollTo({top:0}); });
 }
 
 /* ---------- dashboard ---------- */
@@ -184,14 +344,15 @@ function rDash(){
   const rows = r.signals.map(s => { const rec=recBy[s.symbol];
     return `<tr class="click ${s.symbol===S.sym?"sel":""}" data-sym="${s.symbol}" data-go="analysis">
       <td><b>${s.symbol}</b><div class="mute small">${esc(s.name)} · ${esc(s.sector)}</div></td>
-      <td class="num">${inr2(s.price)}<div class="small ${s.chg_1d>=0?"pos":"neg"}">${spct(s.chg_1d,2)}</div></td>
-      <td>${spark(s.spark)}<div class="small ${s.chg_20d>=0?"pos":"neg"}">${spct(s.chg_20d)} 20d</div></td>
-      ${AGENTS.map(a=>`<td>${chip(s[a].label,s[a].score,s[a].status)}${["ok","degraded"].includes(s[a].status)?cbar(s[a].confidence):""}</td>`).join("")}
-      <td>${actionChip(rec.action)}<div class="small mute">conf ${pct(rec.confidence,0)}</div></td></tr>`}).join("");
+      <td class="num" data-l="Price">${inr2(s.price)}<div class="small ${s.chg_1d>=0?"pos":"neg"}">${spct(s.chg_1d,2)}</div></td>
+      <td data-l="Trend">${spark(s.spark)}<div class="small ${s.chg_20d>=0?"pos":"neg"}">${spct(s.chg_20d)} 20d</div></td>
+      ${AGENTS.map(a=>`<td data-l="${ANAME[a]}">${chip(s[a].label,s[a].score,s[a].status)}${["ok","degraded"].includes(s[a].status)?cbar(s[a].confidence):""}</td>`).join("")}
+      <td data-l="For ${esc(r.user.name.split(" ")[0])}">${actionChip(rec.action)}<div class="small mute">conf ${pct(rec.confidence,0)}</div></td></tr>`}).join("");
   const alerts = alertsHtml();
-  $("#main").innerHTML = kpis() + degrBanner() + `<div class="grid2"><div>
+  $("#main").innerHTML = kpis() + degrBanner() + `
     <div class="card"><h3>Market signals · four independent dimensions<span class="r mute small">chip = classification · bar = confidence · last column = ${esc(r.user.name)}'s personalised action</span></h3>
-      <div style="overflow:auto"><table><thead><tr><th>Stock</th><th class="num">Price</th><th>Trend</th><th>Price momentum</th><th>Volume anomaly</th><th>Sentiment &amp; flows</th><th>Filings (RAG)</th><th>For ${esc(r.user.name.split(" ")[0])}</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div style="overflow:auto"><table class="cards"><thead><tr><th>Stock</th><th class="num">Price</th><th>Trend</th><th>Price momentum</th><th>Volume anomaly</th><th>Sentiment &amp; flows</th><th>Filings (RAG)</th><th>For ${esc(r.user.name.split(" ")[0])}</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+    <div class="grid2"><div>
     <div class="card"><h3>Recommendations for ${esc(r.user.name)} <span class="badge">${esc(r.recommendations[0].profile_label)} profile</span></h3>${recList()}</div>
     </div><div>
     <div class="card"><h3>Portfolio &amp; watchlist alerts</h3>${alerts}</div>
@@ -206,7 +367,9 @@ function degrBanner(){
   return `<div class="box"><b>Degraded-data mode active:</b> ${esc(S.res.degradations.join(", ")||"data-quality warnings")}. ${w.slice(0,4).map(esc).join(" · ")}<br><span class="small mute">Pipeline completed anyway: failed agents are replaced by explicit "no signal" outputs, confidence is reduced, and recommendations lacking filing grounding are capped.</span></div>`;
 }
 function recList(){
-  return S.res.recommendations.filter(r=>r.action!=="WATCH"||r.held||r.notes.length).slice(0,9).map(r=>`
+  const list = S.res.recommendations.filter(r=>r.action!=="WATCH"||r.held||r.notes.length).slice(0,9);
+  if(!list.length) return empty("ok","Nothing to act on right now","No stock clears your thresholds and risk limits. The watchlist keeps tracking them.");
+  return list.map(r=>`
     <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
       <div style="width:105px">${actionChip(r.action)}<div class="small mute">${r.held?"held "+pct(r.position.weight,1):"not held"}</div></div>
       <div style="flex:1;min-width:0"><b data-sym="${r.symbol}" data-go="analysis" style="cursor:pointer">${r.symbol}</b> <span class="mute small">composite ${r.composite>=0?"+":""}${r.composite.toFixed(2)} · confidence ${pct(r.confidence,0)}${r.grounded?"":" · <span class='neg'>ungrounded</span>"}</span>
@@ -281,10 +444,10 @@ function agentCard(a, o){
     <ul>${o.evidence.slice(0,5).map(e=>`<li>${esc(e.text.length>170?e.text.slice(0,168)+"…":e.text)} ${srcs([e.source_id])}</li>`).join("")}</ul></div>`;
 }
 function priceChart(p){
-  const w=560,h=170,vh=34,n=p.close.length,mn=Math.min(...p.close),mx=Math.max(...p.close),vm=Math.max(...p.volume);
+  const w=CW(),h=170,vh=34,n=p.close.length,mn=Math.min(...p.close),mx=Math.max(...p.close),vm=Math.max(...p.volume);
   const pts=p.close.map((v,i)=>`${(i/(n-1)*w).toFixed(1)},${(h-vh-6-(v-mn)/((mx-mn)||1)*(h-vh-16)).toFixed(1)}`).join(" ");
   const bars=p.volume.map((v,i)=>`<rect x="${(i/n*w).toFixed(1)}" y="${h-v/vm*vh}" width="${(w/n*.8).toFixed(1)}" height="${(v/vm*vh).toFixed(1)}" fill="var(--mute)" opacity=".5"/>`).join("");
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%"><polyline fill="none" stroke="var(--acc)" stroke-width="1.8" points="${pts}"/>${bars}<text x="4" y="12" fill="var(--mute)" font-size="10">${mx.toFixed(0)}</text><text x="4" y="${h-vh-8}" fill="var(--mute)" font-size="10">${mn.toFixed(0)}</text></svg>`;
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%"><polyline fill="none" stroke="var(--acc)" stroke-width="1.8" points="${pts}"/>${bars}<text x="4" y="12" fill="var(--mute)" font-size="12">${mx.toFixed(0)}</text><text x="4" y="${h-vh-8}" fill="var(--mute)" font-size="12">${mn.toFixed(0)}</text></svg>`;
 }
 
 /* ---------- personalisation ---------- */
@@ -368,15 +531,15 @@ async function rEval(){
 }
 
 /* ---------- shared helpers (extensions) ---------- */
-function lineChart(series, w=620, h=200, fmt=v=>v.toFixed(2)){
+function lineChart(series, w=CW(), h=200, fmt=v=>v.toFixed(2)){
   const all=series.flatMap(s=>s.values); const mn=Math.min(...all), mx=Math.max(...all), n=Math.max(...series.map(s=>s.values.length));
   const X=i=>40+i/(n-1)*(w-50), Y=v=>h-22-(v-mn)/((mx-mn)||1)*(h-36);
   const lines=series.map(s=>`<polyline fill="none" stroke="${s.color}" stroke-width="${s.width||1.8}" ${s.dash?'stroke-dasharray="4 3"':""} points="${s.values.map((v,i)=>X(i).toFixed(1)+","+Y(v).toFixed(1)).join(" ")}"/>`).join("");
   const legend=series.map((s,i)=>`<span style="color:${s.color};margin-right:12px">● ${esc(s.name)}</span>`).join("");
-  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%"><text x="2" y="${Y(mx)+4}" fill="var(--mute)" font-size="10">${fmt(mx)}</text><text x="2" y="${Y(mn)+4}" fill="var(--mute)" font-size="10">${fmt(mn)}</text>
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%"><text x="2" y="${Y(mx)+4}" fill="var(--mute)" font-size="12">${fmt(mx)}</text><text x="2" y="${Y(mn)+4}" fill="var(--mute)" font-size="12">${fmt(mn)}</text>
     <line x1="40" x2="${w-10}" y1="${Y(1)}" y2="${Y(1)}" stroke="var(--line)" stroke-dasharray="2 3"/>${lines}</svg><div class="small">${legend}</div>`;
 }
-const SERIES_COL = ["#5b9cf5","#2ea36b","#e3a008","#e5534b","#a371f7"];
+const SERIES_COL = ["var(--acc)","var(--pos)","var(--warn)","var(--neg)","var(--mute)"];
 function heat(v){const a=Math.min(1,Math.abs(v));return v>=0?`rgba(229,83,75,${a*.7})`:`rgba(91,156,245,${a*.7})`}
 
 /* ---------- alerts & watchlist (dashboard) ---------- */
@@ -384,14 +547,14 @@ function alertsHtml(){
   const r=S.res, meta=r.alerts_meta;
   const items=r.alerts.map(a=>`<div class="alert ${a.severity}"><b>${a.severity.toUpperCase()}</b>${a.is_new?` <span class="chip warn">NEW</span>`:""} · ${esc(a.text)}<div class="small mute">why it fires for you: ${esc(a.why)}</div></div>`).join("");
   const res = meta.resolved_ids.length ? `<div class="small mute" style="margin-top:6px">Cleared since your last session: ${meta.resolved_ids.map(i=>esc(i.replace(/:+$/,""))).join(" · ")}</div>`:"";
-  return (items||'<div class="mute">No alerts under your rules.</div>')+res;
+  return (items||empty("ok","All clear","No alert fires under your current rules. You can tune them in Portfolio risk & alerts."))+res;
 }
 function watchCard(){
   const r=S.res, by=Object.fromEntries(r.recommendations.map(x=>[x.symbol,x]));
   const rows=r.watchlist.map(s=>{const x=by[s]; return `<tr class="click" data-sym="${s}" data-go="analysis"><td><b>${s}</b></td><td>${actionChip(x.action)}</td><td class="num">${x.composite>=0?"+":""}${x.composite.toFixed(2)}</td><td class="num">${pct(x.confidence,0)}</td><td class="small mute">${esc(x.uncertainty.level)} uncertainty</td><td><button class="sm" data-unwatch="${s}">✕</button></td></tr>`}).join("");
   const opts=r.signals.filter(s=>!r.watchlist.includes(s.symbol)).map(s=>`<option>${s.symbol}</option>`).join("");
   return `<div class="card"><h3>${esc(r.user.name.split(" ")[0])}'s watchlist<span class="r"><select id="wadd">${opts}</select> <button class="sm" id="wbtn">Add</button></span></h3>
-    <table><tbody>${rows||'<tr><td class="mute">Empty</td></tr>'}</tbody></table></div>`;
+    ${rows?`<table><tbody>${rows}</tbody></table>`:empty("list","Your watchlist is empty","Add a stock above to get personalised alerts for it.")}</div>`;
 }
 function bindWatch(){
   document.querySelectorAll("[data-unwatch]").forEach(b=>b.onclick=async e=>{e.stopPropagation(); await setWatch(S.res.watchlist.filter(x=>x!==b.dataset.unwatch));});
@@ -414,7 +577,7 @@ function calibCard(r){
 /* ---------- portfolio risk & alerts tab ---------- */
 function rRisk(){
   const r=S.res, p=r.portfolio, k=p.risk, u=r.user;
-  if(!k.contributions || !k.contributions.length){ $("#main").innerHTML='<div class="box">No positions.</div>'; return; }
+  if(!k.contributions || !k.contributions.length){ $("#main").innerHTML=`<div class="card">${empty("list","No holdings yet","Place a paper trade in Sessions & changes to unlock portfolio risk analytics.",["Open Sessions","id=gohist"])}</div>`; $("#gohist").onclick=()=>{S.tab="hist";S.animate=true;renderTabs();render();}; return; }
   const kp=[["Volatility (ann.)",pct(k.vol_ann,1)],["Beta vs market",k.beta.toFixed(2)],["Diversification ratio",k.diversification_ratio.toFixed(2)],["VaR 95% (1d, hist.)",inr(k.var95_hist)],["VaR 99% (1d)",inr(k.var99_hist)],["Expected shortfall 95%",inr(k.es95_hist)],["Max drawdown (current weights)",pct(k.max_drawdown,1)],["Avg pairwise correlation",k.avg_pair_corr.toFixed(2)]]
     .map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v" style="font-size:17px">${x[1]}</div></div>`).join("");
   const contrib=k.contributions.map(c=>`<tr><td><b>${c.symbol}</b></td><td style="width:34%"><div class="hbar" title="weight"><i style="width:${Math.min(100,c.weight*100*2)}%"></i></div><span class="small mute">${pct(c.weight,0)} of value</span></td><td style="width:34%"><div class="hbar"><i style="width:${Math.min(100,c.risk_share*100)}%;background:${c.risk_share*100>S.res.alerts_meta.rules.max_risk_share_pct?"var(--neg)":"var(--warn)"}"></i></div><span class="small mute">${pct(c.risk_share,0)} of risk</span></td><td class="num small mute">β ${c.beta.toFixed(2)} · σ ${pct(c.vol_ann,0)}</td></tr>`).join("");
@@ -472,7 +635,7 @@ async function rSearch(){
   const go=async()=>{
     if(!$("#sres")) return;
     const p=new URLSearchParams({q:$("#sq").value,mode:$("#smode").value,k:6}); if($("#ssym").value)p.set("symbol",$("#ssym").value); if($("#sdoc").value)p.set("doc_type",$("#sdoc").value); if($("#sdate").value)p.set("date_from",$("#sdate").value); if($("#srec").checked)p.set("recency","true");
-    const r=await api("/api/rag/search?"+p,{method:"GET"}); $("#sres").innerHTML=`<div class="small mute">${r.hits.length} results · ${r.ms} ms · ${esc(r.backend)} · mode ${r.mode}</div>`+hitsHtml(r.hits);};
+    const r=await api("/api/rag/search?"+p,{method:"GET"}); $("#sres").innerHTML=`<div class="small mute">${r.hits.length} results · ${r.ms} ms · ${esc(r.backend)} · mode ${r.mode}</div>`+(r.hits.length?hitsHtml(r.hits):empty("search","No passages matched","Try fewer filters, another company, or switch to vector mode for paraphrases."));};
   $("#sgo").onclick=go; $("#sq").onkeydown=e=>{if(e.key==="Enter")go()};
   document.querySelectorAll("[data-q]").forEach(a=>a.onclick=e=>{e.preventDefault();$("#sq").value=a.dataset.q;go();});
   $("#scmp").onclick=async()=>{const cols=await Promise.all(["bm25","vector","hybrid"].map(async m=>{const p=new URLSearchParams({q:$("#sq").value,mode:m,k:3}); if($("#ssym").value)p.set("symbol",$("#ssym").value); return [m,await api("/api/rag/search?"+p,{method:"GET"})]}));
@@ -488,7 +651,7 @@ function hitsHtml(hits,compact){
 async function rLive(){
   if(!S.live) S.live={tickers:S.meta.live_defaults.join(", "), data:null, busy:false};
   const L=S.live;
-  const body = L.data ? liveBody(L.data) : `<div class="mute">Press <b>Fetch live data</b>. Sources: Yahoo Finance (prices), NSE corporate announcements (disclosures &amp; earnings notices), Google News (headlines).</div>`;
+  const body = L.busy ? skCard(6) + skCard(6) : L.data ? liveBody(L.data) : `<div class="card">${empty("globe","No live data fetched yet","Press Fetch live data to pull real prices from Yahoo Finance, NSE disclosures and Google News headlines.")}</div>`;
   $("#main").innerHTML=`<div class="card"><h3>Live market data <span class="r mute small">real NSE tickers · same six agents, same contract</span></h3>
     <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="ltk" value="${esc(L.tickers)}" style="flex:1;min-width:260px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 10px">
     <button class="primary" id="lgo" ${L.busy?"disabled":""}>${L.busy?"Fetching…":"Fetch live data"}</button></div>
@@ -534,16 +697,16 @@ async function rHist(){
       <div style="margin-top:4px">${bits.join(" ")||(d?'<span class="small mute">no change since the previous session</span>':'<span class="small mute">first session (baseline)</span>')}</div>
       ${e.decisions.length?`<div class="small" style="margin-top:4px">Your decisions on this session's advice: ${e.decisions.map(x=>`${esc(x.symbol)} ${esc(x.action)} → <b>${esc(x.choice)}</b>`).join(", ")}</div>`:""}</div>`};
   const bs=tl.behavior_series;
-  const bchart = bs.length>1 ? lineChart([{name:"FOMO-buy rate",color:"#e3a008",values:bs.map(x=>x.fomo_buy_rate)},{name:"panic-sell rate",color:"#e5534b",values:bs.map(x=>x.panic_sell_rate)}],560,130,v=>pct(v,0)) : '<div class="small mute">Run at least two sessions (and log trades) to see behavioural drift.</div>';
+  const bchart = bs.length>1 ? lineChart([{name:"FOMO-buy rate",color:"var(--warn)",values:bs.map(x=>x.fomo_buy_rate)},{name:"panic-sell rate",color:"var(--neg)",values:bs.map(x=>x.panic_sell_rate)}],CW(),130,v=>pct(v,0)) : '<div class="small mute">Run at least two sessions (and log trades) to see behavioural drift.</div>';
   const tt=h.trades.slice().reverse().map(t=>`<tr><td class="small">${esc(t.ts)}</td><td>${esc(t.symbol)}</td><td>${esc(t.side)}</td><td class="num">${t.qty}</td><td class="num">${inr2(t.price)}</td><td class="small mute">${esc(t.note)}</td></tr>`).join("");
   const dd=h.decisions.map(d=>`<tr><td>${esc(d.symbol)}</td><td>${actionChip(d.action)}</td><td>${esc(d.choice)}</td><td class="small mute">${new Date(d.ts*1000).toLocaleTimeString()}</td></tr>`).join("");
   $("#main").innerHTML=`<div class="grid2"><div>
-    <div class="card"><h3>What changed since the last session <span class="r mute small">snapshots persisted in SQLite</span></h3>${tl.entries.map(entry).join("")||'<div class="mute">No sessions yet - press Run analysis.</div>'}</div>
-    <div class="card"><h3>Recent trade log (input to behavioural analytics)</h3><table><thead><tr><th>Date</th><th>Stock</th><th>Side</th><th class="num">Qty</th><th class="num">Price</th><th>Note</th></tr></thead><tbody>${tt}</tbody></table></div>
+    <div class="card"><h3>What changed since the last session <span class="r mute small">snapshots persisted in SQLite</span></h3>${tl.entries.map(entry).join("")||empty("clock","No sessions yet","Press Run analysis. Each run is saved so you can see what changed next time.")}</div>
+    <div class="card"><h3>Recent trade log (input to behavioural analytics)</h3><div style="overflow:auto"><table><thead><tr><th>Date</th><th>Stock</th><th>Side</th><th class="num">Qty</th><th class="num">Price</th><th>Note</th></tr></thead><tbody>${tt}</tbody></table></div></div>
    </div><div>
     <div class="card"><h3>Behavioural pattern over time</h3>${bchart}<div class="small mute" style="margin-top:6px">Current archetype: <b>${esc(S.res.behavior.archetype)}</b></div></div>
     <div class="card"><h3>Your decisions on advice</h3><div class="small mute" style="margin-bottom:6px">${ds.total?`Accepted ${ds.accepted} of ${ds.total} (${pct(ds.accept_rate,0)}).`:"None recorded yet."}</div>
-      <table><tbody>${dd||'<tr><td class="mute">Accept or ignore a recommendation on the Dashboard to record one.</td></tr>'}</tbody></table></div>
+      ${dd?`<table><tbody>${dd}</tbody></table>`:empty("ok","No decisions yet","Accept or ignore a recommendation on the Dashboard; it is remembered and shapes later advice.")}</div>
     <div class="card"><h3>Place a paper trade (updates holdings &amp; cash)</h3>
       <select id="tsym">${S.res.signals.map(s=>`<option>${s.symbol}</option>`).join("")}</select>
       <select id="tside"><option>BUY</option><option>SELL</option></select>
@@ -557,14 +720,14 @@ async function evalExtras(bt){
   const [st]=await Promise.all([api("/api/strategy",{method:"GET"})]);
   const cm=bt.calibration_model, runs=Object.values(st.runs);
   const cols=SERIES_COL;
-  const eq=lineChart([...runs.map((r,i)=>({name:`${r.label} (risk ${r.risk_tolerance})`,color:cols[i],values:[1,...r.equity]})),{name:"equal-weight benchmark",color:"#8b98a9",values:[1,...runs[0].benchmark_equity],dash:true}],620,210);
+  const eq=lineChart([...runs.map((r,i)=>({name:`${r.label} (risk ${r.risk_tolerance})`,color:cols[i],values:[1,...r.equity]})),{name:"equal-weight benchmark",color:"var(--mute)",values:[1,...runs[0].benchmark_equity],dash:true}],CW(),210);
   const mrow=r=>`<tr><td>${esc(r.label)}</td><td class="num">${spct(r.metrics.total_return,0)}</td><td class="num">${r.metrics.sharpe.toFixed(2)}</td><td class="num">${pct(r.metrics.vol,0)}</td><td class="num neg">${pct(r.metrics.max_drawdown,0)}</td><td class="num">${pct(r.metrics.avg_exposure,0)}</td><td class="num">${pct(r.metrics.avg_turnover,0)}</td></tr>`;
   const bm=runs[0].benchmark_metrics, brow=`<tr><td>Equal-weight benchmark</td><td class="num">${spct(bm.total_return,0)}</td><td class="num">${bm.sharpe.toFixed(2)}</td><td class="num">${pct(bm.vol,0)}</td><td class="num neg">${pct(bm.max_drawdown,0)}</td><td class="num">100%</td><td class="num">–</td></tr>`;
   const curve=cm.curve, w=300,h=150, X=c=>34+(c-0.15)/0.8*(w-44), Y=p=>h-20-(p-0.4)/0.4*(h-30);
   const band=curve.map(c=>`${X(c.conf).toFixed(1)},${Y(Math.min(.8,Math.max(.4,c.hi))).toFixed(1)}`).join(" ")+" "+curve.slice().reverse().map(c=>`${X(c.conf).toFixed(1)},${Y(Math.min(.8,Math.max(.4,c.lo))).toFixed(1)}`).join(" ");
   const cc=`<svg viewBox="0 0 ${w} ${h}" style="width:100%"><polygon points="${band}" fill="var(--acc)" opacity=".2"/><polyline fill="none" stroke="var(--acc)" stroke-width="2" points="${curve.map(c=>X(c.conf).toFixed(1)+","+Y(Math.min(.8,Math.max(.4,c.p))).toFixed(1)).join(" ")}"/>
-    <line x1="34" x2="${w-10}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="2" y="${Y(.5)+3}" fill="var(--mute)" font-size="9">50%</text><text x="2" y="${Y(.7)+3}" fill="var(--mute)" font-size="9">70%</text>
-    <text x="34" y="${h-4}" fill="var(--mute)" font-size="9">raw confidence 0.15 → 0.95</text></svg>`;
+    <line x1="34" x2="${w-10}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="2" y="${Y(.5)+3}" fill="var(--mute)" font-size="11">50%</text><text x="2" y="${Y(.7)+3}" fill="var(--mute)" font-size="11">70%</text>
+    <text x="34" y="${h-4}" fill="var(--mute)" font-size="11">raw confidence 0.15 → 0.95</text></svg>`;
   const rel=(cm.reliability||[]).map(r=>`<tr><td class="num">${r.n}</td><td class="num">${pct(r.mean_raw_conf,0)}</td><td class="num">${pct(r.mean_calibrated,0)}</td><td class="num"><b>${pct(r.actual,0)}</b></td></tr>`).join("");
   return `<div class="grid2"><div>
     <div class="card"><h3>Personalised strategy back-test <span class="r mute small">weekly rebalance, ${(st.cost_per_turnover*100).toFixed(1)}% cost on turnover</span></h3>${eq}
@@ -604,7 +767,7 @@ async function showArch(){
   $("#modalin").innerHTML = `<div style="display:flex"><b>Architecture &amp; decision logic</b><span class="sp"></span><button class="sm" onclick="document.getElementById('modal').classList.remove('on')">Close</button></div><pre class="md">${esc(t)}</pre>`;
   $("#modal").classList.add("on");
 }
-boot().catch(e => { document.body.insertAdjacentHTML("beforeend", `<pre style="color:#e5534b;padding:20px">${esc(e.stack||e)}</pre>`); });
+boot().catch(e => { document.body.insertAdjacentHTML("beforeend", `<pre style="color:var(--neg);padding:20px">${esc(e.stack||e)}</pre>`); });
 </script>
 </body>
 </html>
