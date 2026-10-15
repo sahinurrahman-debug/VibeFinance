@@ -1,0 +1,16 @@
+# Render Blueprint: New + -> Blueprint -> pick this repo.
+# Single instance / single worker only: the embedded Qdrant store cannot be shared between processes.
+services:
+  - type: web
+    name: vibefinance
+    runtime: python
+    plan: free                      # sleeps after ~15 min idle; disk is ephemeral (DB + vectors are re-seeded on restart)
+    buildCommand: pip install -r requirements.txt
+    startCommand: python run.py --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/meta
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: PYTHONUNBUFFERED
+        value: "1"
