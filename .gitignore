@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+
+# generated at runtime (seeded SQLite DB, Qdrant vectors, metrics log)
+data/
+logs/
+*.db

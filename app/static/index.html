@@ -1,0 +1,610 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VibeFinance - Multi-Agent Financial Intelligence</title>
+<style>
+:root{--bg:#0d1117;--panel:#161b22;--panel2:#1c2330;--line:#2a3342;--text:#e6edf3;--mute:#8b98a9;--pos:#2ea36b;--pos-bg:#12301f;--neg:#e5534b;--neg-bg:#3a1a1a;--neu:#8b98a9;--neu-bg:#222a36;--acc:#5b9cf5;--warn:#e3a008;--warn-bg:#3a2e0b;--mark:#5b4a00}
+:root[data-theme=light]{--bg:#f4f6f9;--panel:#fff;--panel2:#f0f3f7;--line:#d8dee7;--text:#16202c;--mute:#5d6b7c;--pos:#13824f;--pos-bg:#dff5e9;--neg:#c9342c;--neg-bg:#fde5e3;--neu:#5d6b7c;--neu-bg:#e8ecf2;--acc:#1f6fd6;--warn:#a06a00;--warn-bg:#fff2cf;--mark:#fff0a0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:10px 20px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:0;z-index:20}
+.logo{font-weight:700;font-size:18px;letter-spacing:.2px}.logo span{color:var(--acc)}
+.badge{font-size:11px;padding:2px 8px;border-radius:99px;border:1px solid var(--line);color:var(--mute)}
+.badge.warn{color:var(--warn);border-color:var(--warn);background:var(--warn-bg)}
+.sp{flex:1}
+button,select,input{font:inherit;color:var(--text)}
+button{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--acc)}button.primary{background:var(--acc);border-color:var(--acc);color:#fff}
+button.sm{padding:2px 8px;font-size:12px}
+.users{display:flex;gap:6px}
+.user{padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--panel2);cursor:pointer;text-align:left}
+.user.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.user small{display:block;color:var(--mute);font-size:11px}
+.degr{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:8px 20px;border-bottom:1px solid var(--line);background:var(--panel2);font-size:12px}
+.degr label{display:flex;gap:5px;align-items:center;padding:3px 8px;border:1px dashed var(--line);border-radius:99px;cursor:pointer}
+.degr label.on{border-color:var(--warn);background:var(--warn-bg);color:var(--warn)}
+nav{display:flex;gap:2px;padding:0 20px;border-bottom:1px solid var(--line);background:var(--panel);overflow-x:auto}
+nav button{border:0;border-bottom:2px solid transparent;border-radius:0;background:none;padding:10px 14px;color:var(--mute);white-space:nowrap}
+nav button.on{color:var(--text);border-bottom-color:var(--acc)}
+main{padding:16px 20px;max-width:1500px;margin:0 auto}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.kpi .v{font-size:20px;font-weight:650}.kpi .l{color:var(--mute);font-size:11px;text-transform:uppercase;letter-spacing:.4px}.kpi .s{color:var(--mute);font-size:11px}
+.grid2{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:14px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:1100px){.grid2,.grid3{grid-template-columns:1fr}}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px;min-width:0}
+.card h3{margin:0 0 10px;font-size:13px;text-transform:uppercase;letter-spacing:.5px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.card h3 .r{margin-left:auto;text-transform:none;letter-spacing:0;font-weight:400}
+table{width:100%;border-collapse:collapse}th,td{padding:7px 8px;text-align:left;border-bottom:1px solid var(--line);vertical-align:middle}
+th{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.4px;font-weight:600}
+tr.click{cursor:pointer}tr.click:hover td{background:var(--panel2)}tr.sel td{background:var(--panel2)}
+.num{text-align:right;font-variant-numeric:tabular-nums}
+.chip{display:inline-block;padding:2px 8px;border-radius:6px;font-size:12px;font-weight:600;white-space:nowrap}
+.chip.pos{background:var(--pos-bg);color:var(--pos)}.chip.neg{background:var(--neg-bg);color:var(--neg)}.chip.neu{background:var(--neu-bg);color:var(--neu)}
+.chip.warn{background:var(--warn-bg);color:var(--warn)}.chip.na{background:transparent;color:var(--mute);border:1px dashed var(--line)}
+.chip.deg{outline:1px dashed var(--warn)}
+.cbar{height:4px;background:var(--line);border-radius:3px;margin-top:3px;width:70px}.cbar i{display:block;height:100%;border-radius:3px;background:var(--acc)}
+.div{position:relative;height:8px;background:var(--line);border-radius:4px;margin:4px 0}.div:before{content:"";position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--mute)}
+.div i{position:absolute;top:0;bottom:0;border-radius:4px}
+.mute{color:var(--mute)}.small{font-size:12px}.pos{color:var(--pos)}.neg{color:var(--neg)}
+.src{display:inline-block;font-size:11px;padding:0 6px;margin:1px 2px;border-radius:4px;background:var(--panel2);border:1px solid var(--line);color:var(--acc);cursor:pointer;font-family:ui-monospace,Consolas,monospace}
+.src:hover{border-color:var(--acc)}
+.chain{border-left:2px solid var(--line);margin-left:6px;padding-left:16px}
+.step{position:relative;margin-bottom:12px}.step:before{content:"";position:absolute;left:-23px;top:5px;width:10px;height:10px;border-radius:50%;background:var(--acc)}
+.step b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--mute)}
+.agentcard{border:1px solid var(--line);border-radius:10px;padding:10px;background:var(--panel2)}
+.agentcard h4{margin:0 0 4px;font-size:13px;display:flex;gap:6px;align-items:center}
+.agentcard ul{margin:6px 0 0;padding-left:16px}.agentcard li{margin:3px 0;font-size:12.5px}
+.alert{padding:7px 10px;border-radius:8px;margin-bottom:6px;font-size:13px;border-left:3px solid var(--warn);background:var(--panel2)}
+.alert.high{border-left-color:var(--neg)}.alert.medium{border-left-color:var(--warn)}
+.box{border:1px solid var(--warn);background:var(--warn-bg);color:var(--text);border-radius:8px;padding:8px 10px;margin:8px 0;font-size:13px}
+.box.info{border-color:var(--acc);background:var(--panel2)}
+.hbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;min-width:60px}.hbar i{display:block;height:100%;background:var(--acc)}
+.gantt{position:relative;font-size:12px}.grow{display:flex;align-items:center;gap:8px;margin:3px 0}.grow .n{width:80px;color:var(--mute)}.grow .t{position:relative;flex:1;height:14px;background:var(--panel2);border-radius:3px}.grow .t i{position:absolute;top:1px;bottom:1px;border-radius:3px;background:var(--acc);min-width:2px}
+.grow .t i.degraded{background:var(--warn)}.grow .t i.failed,.grow .t i.timeout,.grow .t i.abstained{background:var(--neg)}
+.stage{display:flex;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}.stage .ms{width:70px;text-align:right;font-variant-numeric:tabular-nums;color:var(--acc)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:50;padding:20px}
+.modal.on{display:flex}.modal .in{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:820px;width:100%;max-height:88vh;overflow:auto;padding:18px}
+mark{background:var(--mark);color:inherit;padding:0 2px;border-radius:3px}
+.doc h4{margin:14px 0 4px}.doc p{margin:0}.doc .sec{padding:8px 10px;border:1px solid var(--line);border-radius:8px;margin-top:8px}
+pre.md{white-space:pre-wrap;font:12.5px/1.5 ui-monospace,Consolas,monospace}
+input[type=range]{width:100%}.field{margin:10px 0}.field label{display:flex;justify-content:space-between;color:var(--mute);font-size:12px}
+input[type=number],select{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:4px 8px}
+.loading{opacity:.5;pointer-events:none}
+.hidden{display:none}
+.spark{vertical-align:middle}
+.quote{border-left:3px solid var(--acc);padding:4px 10px;margin:6px 0;background:var(--panel2);border-radius:0 6px 6px 0;font-size:12.5px}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">Vibe<span>Finance</span></div>
+  <span class="badge warn" title="All companies, prices, filings and flows are synthetic">SYNTHETIC DATA</span>
+  <span class="badge" id="asof"></span>
+  <div class="sp"></div>
+  <div class="users" id="users"></div>
+  <button class="primary" id="run">Run analysis</button>
+  <button class="sm" id="arch">Architecture</button>
+  <button class="sm" id="theme">Theme</button>
+</header>
+<div class="degr" id="degr"></div>
+<nav id="tabs"></nav>
+<main id="main"></main>
+<div class="modal" id="modal"><div class="in" id="modalin"></div></div>
+
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const inr = n => "₹" + Math.round(n).toLocaleString("en-IN");
+const inr2 = n => "₹" + Number(n).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+const pct = (x, d=1) => (x*100).toFixed(d) + "%";
+const spct = (x, d=1) => (x>=0?"+":"") + (x*100).toFixed(d) + "%";
+const sgn = (x, t=.15) => x>t ? "pos" : x<-t ? "neg" : "neu";
+const ACT = {BUY:"pos",ACCUMULATE:"pos",HOLD:"neu",WATCH:"neu",TRIM:"neg",SELL:"neg",AVOID:"neg"};
+const AGENTS = ["momentum","volume","sentiment","filings"];
+const ANAME = {momentum:"Momentum",volume:"Volume anomaly",sentiment:"Sentiment & flows",filings:"Filings (RAG)",risk:"Portfolio risk",behavior:"Behaviour"};
+
+const S = {rid:0, meta:null, user:"asha", degr:new Set(), res:null, sym:null, tab:"dash", compare:null, bench:null, prices:{}, busy:false};
+
+async function api(path, opts){
+  const r = await fetch(path, opts && {method:opts.method||"POST", headers:{"content-type":"application/json"}, body: JSON.stringify(opts.body)});
+  if(!r.ok) throw new Error(path + " -> " + r.status + " " + await r.text());
+  return r.json();
+}
+
+/* ---------- small renderers ---------- */
+function chip(label, score, status){
+  if(status && !["ok","degraded"].includes(status)) return `<span class="chip na" title="${esc(status)}">${esc(status==="abstained"?"abstained":status==="timeout"?"timed out":"unavailable")}</span>`;
+  return `<span class="chip ${sgn(score)} ${status==="degraded"?"deg":""}" title="score ${score>=0?"+":""}${(+score).toFixed(2)}${status==="degraded"?" (degraded data)":""}">${esc(label)}</span>`;
+}
+function cbar(c){return `<div class="cbar" title="confidence ${pct(c,0)}"><i style="width:${Math.round(c*100)}%"></i></div>`}
+function divbar(s){const w=Math.min(50,Math.abs(s)*50);const col=s>=0?"var(--pos)":"var(--neg)";return `<div class="div"><i style="${s>=0?`left:50%`:`right:50%`};width:${w}%;background:${col}"></i></div>`}
+function spark(arr){const w=90,h=24,mn=Math.min(...arr),mx=Math.max(...arr);const pts=arr.map((v,i)=>`${(i/(arr.length-1)*w).toFixed(1)},${(h-(v-mn)/((mx-mn)||1)*(h-2)-1).toFixed(1)}`).join(" ");
+  const up=arr[arr.length-1]>=arr[0];return `<svg class="spark" width="${w}" height="${h}"><polyline fill="none" stroke="${up?"var(--pos)":"var(--neg)"}" stroke-width="1.5" points="${pts}"/></svg>`}
+function srcs(refs){return (refs||[]).filter(Boolean).map(r=>`<span class="src" data-src="${esc(r)}">${esc(r.length>34?r.slice(0,32)+"…":r)}</span>`).join("")}
+function actionChip(a){return `<span class="chip ${ACT[a]}">${a}</span>`}
+
+/* ---------- boot ---------- */
+async function boot(){
+  S.meta = await api("/api/meta");
+  $("#asof").textContent = "as of " + S.meta.as_of;
+  renderUsers(); renderDegr(); renderTabs();
+  $("#run").onclick = run; $("#arch").onclick = showArch;
+  $("#theme").onclick = () => { const r=document.documentElement; r.dataset.theme = r.dataset.theme==="light"?"dark":"light"; };
+  document.addEventListener("click", e => { const t=e.target.closest("[data-src]"); if(t) openSource(t.dataset.src); if(e.target.id==="modal") $("#modal").classList.remove("on"); });
+  await run();
+}
+function renderUsers(){
+  $("#users").innerHTML = S.meta.users.map(u => `<div class="user ${u.id===S.user?"on":""}" data-u="${u.id}"><b>${esc(u.name)}</b><small>risk ${u.risk_tolerance}/10 · max pos ${u.max_position_pct}% · ${u.horizon_years}y</small></div>`).join("");
+  document.querySelectorAll(".user").forEach(el => el.onclick = () => { S.user = el.dataset.u; S.compare=null; renderUsers(); run(); });
+}
+function renderDegr(){
+  $("#degr").innerHTML = `<b>Degraded-data scenarios:</b>` + Object.entries(S.meta.degradations).map(([k,v]) =>
+    `<label class="${S.degr.has(k)?"on":""}" title="${esc(v)}"><input type="checkbox" data-d="${k}" ${S.degr.has(k)?"checked":""}> ${k.replace(/_/g," ")}</label>`).join("")
+    + `<span class="mute">toggle to inject a failure; the pipeline must still return cited output</span>`;
+  document.querySelectorAll("[data-d]").forEach(el => el.onchange = () => { el.checked?S.degr.add(el.dataset.d):S.degr.delete(el.dataset.d); S.compare=null; renderDegr(); run(); });
+}
+const TABS = [["dash","Dashboard"],["analysis","Stock analysis"],["person","Personalisation"],["risk","Portfolio risk & alerts"],["search","Filings search"],["live","Live data"],["eval","Evaluation & metrics"],["hist","Sessions & changes"]];
+function renderTabs(){
+  $("#tabs").innerHTML = TABS.map(([k,l]) => `<button class="${S.tab===k?"on":""}" data-t="${k}">${l}</button>`).join("");
+  document.querySelectorAll("[data-t]").forEach(el => el.onclick = () => { S.tab = el.dataset.t; renderTabs(); render(); });
+}
+async function run(){
+  S.busy = true; $("#main").classList.add("loading");
+  try {
+    S.res = await api("/api/analyze", {body:{user_id:S.user, degradations:[...S.degr]}});
+    if(!S.sym || !S.res.recommendations.find(r=>r.symbol===S.sym)) S.sym = S.res.recommendations[0].symbol;
+  } catch(e){ $("#main").innerHTML = `<div class="box">Request failed: ${esc(e.message)}</div>`; }
+  S.busy = false; $("#main").classList.remove("loading"); render();
+}
+function render(){
+  if(!S.res) return;
+  S.rid++;
+  ({dash:rDash, analysis:rAnalysis, person:rPerson, risk:rRisk, search:rSearch, live:rLive, eval:rEval, hist:rHist})[S.tab]();
+  document.querySelectorAll("[data-sym]").forEach(el => el.onclick = () => { S.sym = el.dataset.sym; if(el.dataset.go){S.tab=el.dataset.go; renderTabs();} S.compare=null; render(); });
+}
+
+/* ---------- dashboard ---------- */
+function kpis(){
+  const m=S.res.metrics, p=S.res.portfolio, a=S.res.portfolio_after;
+  const k=[["Portfolio value",inr(p.total),`${pct(p.cash_pct,0)} cash`],
+    ["Concentration risk",p.concentration_score.toFixed(0)+" / 100",`→ ${a.concentration_score.toFixed(0)} after suggestions`],
+    ["Pipeline latency",Math.round(m.e2e_ms)+" ms",`agents ${Math.round(m.agent_wall_ms)} ms · ${m.parallel_speedup}× parallel`],
+    ["Signal accuracy (30d)",pct(m.signal_accuracy_30d.ensemble,0),`backtest n=${m.backtest_n} · base ${pct(S.meta.backtest_meta.base_rate_up,0)}`],
+    ["Citation coverage",pct(m.citation_coverage,0),`filing quotes verified ${m.filing_citations_verified==null?"n/a":pct(m.filing_citations_verified,0)}`],
+    ["Agents healthy",`${m.agents_usable}/${m.agents_total}`,`${m.agents_degraded} degraded · ${m.agents_failed} failed/abstained`]];
+  return `<div class="kpis">${k.map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v">${x[1]}</div><div class="s">${x[2]}</div></div>`).join("")}</div>`;
+}
+function rDash(){
+  const r=S.res, recBy=Object.fromEntries(r.recommendations.map(x=>[x.symbol,x]));
+  const rows = r.signals.map(s => { const rec=recBy[s.symbol];
+    return `<tr class="click ${s.symbol===S.sym?"sel":""}" data-sym="${s.symbol}" data-go="analysis">
+      <td><b>${s.symbol}</b><div class="mute small">${esc(s.name)} · ${esc(s.sector)}</div></td>
+      <td class="num">${inr2(s.price)}<div class="small ${s.chg_1d>=0?"pos":"neg"}">${spct(s.chg_1d,2)}</div></td>
+      <td>${spark(s.spark)}<div class="small ${s.chg_20d>=0?"pos":"neg"}">${spct(s.chg_20d)} 20d</div></td>
+      ${AGENTS.map(a=>`<td>${chip(s[a].label,s[a].score,s[a].status)}${["ok","degraded"].includes(s[a].status)?cbar(s[a].confidence):""}</td>`).join("")}
+      <td>${actionChip(rec.action)}<div class="small mute">conf ${pct(rec.confidence,0)}</div></td></tr>`}).join("");
+  const alerts = alertsHtml();
+  $("#main").innerHTML = kpis() + degrBanner() + `<div class="grid2"><div>
+    <div class="card"><h3>Market signals · four independent dimensions<span class="r mute small">chip = classification · bar = confidence · last column = ${esc(r.user.name)}'s personalised action</span></h3>
+      <div style="overflow:auto"><table><thead><tr><th>Stock</th><th class="num">Price</th><th>Trend</th><th>Price momentum</th><th>Volume anomaly</th><th>Sentiment &amp; flows</th><th>Filings (RAG)</th><th>For ${esc(r.user.name.split(" ")[0])}</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+    <div class="card"><h3>Recommendations for ${esc(r.user.name)} <span class="badge">${esc(r.recommendations[0].profile_label)} profile</span></h3>${recList()}</div>
+    </div><div>
+    <div class="card"><h3>Portfolio &amp; watchlist alerts</h3>${alerts}</div>
+    ${watchCard()}
+    ${portfolioCard()}
+    </div></div>`;
+  bindDecisions(); bindWatch();
+}
+function degrBanner(){
+  const w=[...new Set(S.res.recommendations.flatMap(r=>r.warnings))];
+  if(!S.res.degradations.length && !w.length) return "";
+  return `<div class="box"><b>Degraded-data mode active:</b> ${esc(S.res.degradations.join(", ")||"data-quality warnings")}. ${w.slice(0,4).map(esc).join(" · ")}<br><span class="small mute">Pipeline completed anyway: failed agents are replaced by explicit "no signal" outputs, confidence is reduced, and recommendations lacking filing grounding are capped.</span></div>`;
+}
+function recList(){
+  return S.res.recommendations.filter(r=>r.action!=="WATCH"||r.held||r.notes.length).slice(0,9).map(r=>`
+    <div style="display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)">
+      <div style="width:105px">${actionChip(r.action)}<div class="small mute">${r.held?"held "+pct(r.position.weight,1):"not held"}</div></div>
+      <div style="flex:1;min-width:0"><b data-sym="${r.symbol}" data-go="analysis" style="cursor:pointer">${r.symbol}</b> <span class="mute small">composite ${r.composite>=0?"+":""}${r.composite.toFixed(2)} · confidence ${pct(r.confidence,0)}${r.grounded?"":" · <span class='neg'>ungrounded</span>"}</span>
+        <div class="small">${r.sizing?`<b>${r.sizing.side} ${r.sizing.qty} sh (~${inr(r.sizing.amount)})</b>${r.sizing.tranches>1?` in ${r.sizing.tranches} tranches`:""} · `:""}${esc(r.notes[0]||r.headline)}</div>
+        <div>${r.conflicts.length?`<span class="chip warn" title="${esc(r.disagreement)}">agents disagree</span> `:""}${(r.action!=="WATCH"||r.held)?`<button class="sm" data-dec="${r.rec_id}|${r.symbol}|${r.action}|accepted">Accept</button> <button class="sm" data-dec="${r.rec_id}|${r.symbol}|${r.action}|ignored">Ignore</button>`:""}</div></div></div>`).join("");
+}
+function bindDecisions(){
+  document.querySelectorAll("[data-dec]").forEach(b => b.onclick = async e => { e.stopPropagation();
+    const [rid,sym,act,choice]=b.dataset.dec.split("|"); await api("/api/decisions",{body:{user_id:S.user,rec_id:+rid,symbol:sym,action:act,choice}});
+    b.parentElement.innerHTML = `<span class="chip pos">recorded: ${choice}</span> <span class="small mute">stored; the Behaviour agent will see it next run</span>`; });
+}
+function portfolioCard(){
+  const p=S.res.portfolio, a=S.res.portfolio_after, u=S.res.user;
+  const rows=p.positions.map(x=>`<tr class="click" data-sym="${x.symbol}" data-go="analysis"><td><b>${x.symbol}</b></td><td class="num">${x.qty}</td><td class="num">${inr(x.value)}</td>
+    <td style="width:90px"><div class="hbar" title="limit ${u.max_position_pct}%"><i style="width:${Math.min(100,x.weight*100/u.max_position_pct*100)}%;background:${x.weight*100>u.max_position_pct?"var(--neg)":"var(--acc)"}"></i></div><span class="small mute">${pct(x.weight,1)} / ${u.max_position_pct}%</span></td>
+    <td class="num ${x.pnl>=0?"pos":"neg"}">${spct(x.pnl_pct)}</td></tr>`).join("");
+  const sec=Object.entries(p.sector_weights).map(([k,v])=>`<div class="small" style="display:flex;gap:8px;align-items:center"><span style="width:100px">${esc(k)}</span><div class="hbar" style="flex:1"><i style="width:${Math.min(100,v*100/u.max_sector_pct*100)}%;background:${v*100>u.max_sector_pct?"var(--neg)":"var(--acc)"}"></i></div><span class="mute" style="width:90px;text-align:right">${pct(v,0)} / ${u.max_sector_pct}%</span></div>`).join("");
+  return `<div class="card"><h3>${esc(u.name)}'s portfolio <span class="r mute small">${esc(S.res.behavior.archetype)}</span></h3>
+    <table><thead><tr><th>Holding</th><th class="num">Qty</th><th class="num">Value</th><th>Weight / limit</th><th class="num">P&amp;L</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="small mute" style="margin:8px 0">Cash ${inr(p.cash)} (${pct(p.cash_pct,0)}) · annualised vol ${pct(p.volatility_ann,1)} · 1-day 95% VaR ${inr(p.var95_1d)} ${p.price_note?`· <span class="neg">${esc(p.price_note)}</span>`:""}</div>
+    <div style="margin:8px 0"><b>Sector exposure vs limit</b>${sec}</div>
+    ${p.limit_flags.map(f=>`<div class="alert high">${esc(f.text)}</div>`).join("")}
+    <div class="small mute">Concentration score ${p.concentration_score} (stocks ${p.stock_concentration}, sectors ${p.sector_concentration}) → ${a.concentration_score} if suggested trades are executed.</div></div>`;
+}
+
+/* ---------- analysis ---------- */
+async function rAnalysis(){
+  const r = S.res.recommendations.find(x=>x.symbol===S.sym); if(!r) return;
+  const sig = S.res.signals.find(x=>x.symbol===S.sym);
+  const rid=S.rid;
+  if(!S.prices[S.sym]) S.prices[S.sym] = await api("/api/prices/"+S.sym+"?n=120",{method:"GET"});
+  if(rid!==S.rid) return;
+  const chain = r.reasoning_chain.map(c=>`<div class="step"><b>${esc(c.step)}</b>${esc(c.text)} ${srcs(c.refs)}</div>`).join("");
+  const cards = ["momentum","volume","sentiment","filings","risk","behavior"].map(a=>agentCard(a, r.agents[a])).join("");
+  const contrib = r.contributions.map(c=>`<tr><td>${esc(ANAME[c.agent])}</td><td class="num">${pct(c.weight,0)}</td><td class="num">${c.score>=0?"+":""}${c.score.toFixed(2)}</td><td class="num">${pct(c.confidence,0)}</td><td class="num"><b>${c.contribution>=0?"+":""}${c.contribution.toFixed(2)}</b></td><td style="width:90px">${divbar(c.contribution*2)}</td></tr>`).join("");
+  const cits = Object.values(r.citations).filter(c=>["filing","news","flow"].includes(c.kind)).sort((a,b)=>(a.kind==="filing"?-1:1)).map(c=>`
+    <div class="quote"><span class="src" data-src="${esc(c.source_id)}">${esc(c.source_id)}</span> <b>${esc(c.title)}</b> <span class="mute small">${esc(c.date)} · ${esc(c.kind)}${c.score!=null?` · retrieval ${c.score}`:""}</span> ${c.verified===true?`<span class="chip pos">✓ quote verified in source</span>`:c.verified===false?`<span class="chip neg">✗ not found in source</span>`:""}
+    <div class="small">${esc(c.snippet)}</div></div>`).join("");
+  const g = S.res.gantt.filter(x=>x.symbol===S.sym); const gmax=Math.max(...g.map(x=>x.start+x.ms),1);
+  const gantt = g.map(x=>`<div class="grow"><span class="n">${x.agent}</span><div class="t"><i class="${x.status}" style="left:${x.start/gmax*100}%;width:${x.ms/gmax*100}%"></i></div><span class="mute" style="width:60px;text-align:right">${Math.round(x.ms)} ms</span></div>`).join("");
+  $("#main").innerHTML = `
+   <div style="display:flex;gap:10px;align-items:center;margin-bottom:12px;flex-wrap:wrap"><b style="font-size:18px">${r.symbol}</b><span class="mute">${esc(r.name)} · ${esc(r.sector)} · ${inr2(r.price)}</span><div class="sp"></div>
+     <select id="symsel">${S.res.signals.map(s=>`<option ${s.symbol===S.sym?"selected":""}>${s.symbol}</option>`).join("")}</select></div>
+   <div class="card"><div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center">
+      <div><div class="mute small">Recommendation for ${esc(S.res.user.name)} (${esc(r.profile_label)})</div><div style="font-size:26px;font-weight:700"><span class="chip ${ACT[r.action]}" style="font-size:20px">${r.action}</span> <span style="font-size:15px;font-weight:500">${esc(r.headline)}</span></div></div>
+      <div><div class="mute small">Composite signal</div><div style="font-size:20px;font-weight:650">${r.composite>=0?"+":""}${r.composite.toFixed(2)}</div><div class="small mute">range ${r.interval[0].toFixed(2)} … ${r.interval[1].toFixed(2)}</div></div>
+      <div><div class="mute small">Confidence</div><div style="font-size:20px;font-weight:650">${pct(r.confidence,0)}</div><div class="small mute">${r.calibration&&r.calibration.hit_rate!=null?`similar signals right ${pct(r.calibration.hit_rate,0)} (n=${r.calibration.n})`:"no calibration data"}</div></div>
+      <div><div class="mute small">Suggested trade</div><div style="font-size:16px;font-weight:650">${r.sizing?`${r.sizing.side} ${r.sizing.qty} sh · ${inr(r.sizing.amount)}`:"none"}</div><div class="small mute">${r.sizing&&r.sizing.tranches>1?r.sizing.tranches+" tranches":r.held?"currently "+pct(r.position.weight,1)+" of portfolio":"not held"}</div></div>
+    </div>
+    ${r.notes.map(n=>`<div class="box info">${esc(n)}</div>`).join("")}
+    ${r.conflicts.length?`<div class="box"><b>Agents disagree.</b> ${esc(r.disagreement)}</div>`:""}
+    ${r.warnings.length?`<div class="box"><b>Data warnings:</b> ${r.warnings.map(esc).join(" · ")}</div>`:""}
+   </div>
+   <div class="grid2"><div>
+     <div class="card"><h3>Full reasoning chain <span class="r mute small">click a source tag to open the evidence</span></h3><div class="chain">${chain}</div></div>
+     <div class="card"><h3>Specialised agents · structured outputs</h3><div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(260px,1fr))">${cards}</div></div>
+   </div><div>
+     <div class="card"><h3>Price &amp; volume (120 sessions)</h3>${priceChart(S.prices[S.sym])}</div>
+     <div class="card"><h3>How the agents were combined</h3><table><thead><tr><th>Agent</th><th class="num">Profile wt</th><th class="num">Score</th><th class="num">Conf</th><th class="num">Contribution</th><th></th></tr></thead><tbody>${contrib}</tbody></table></div>
+     ${calibCard(r)}
+     <div class="card"><h3>Sources &amp; attribution</h3>${cits||'<div class="mute">No filing/news sources (see warnings).</div>'}</div>
+     <div class="card"><h3>Parallel execution timeline <span class="r mute small">${S.res.metrics.e2e_ms} ms end-to-end</span></h3><div class="gantt">${gantt}</div></div>
+   </div></div>`;
+  $("#symsel").onchange = e => { S.sym = e.target.value; render(); };
+}
+function agentCard(a, o){
+  const ok = ["ok","degraded"].includes(o.status);
+  return `<div class="agentcard"><h4>${esc(ANAME[a])} ${ok?chip(o.label,o.kind==="signal"?o.score:(o.score>0?1:o.score<0?-1:0),o.status):chip("",0,o.status)}</h4>
+    ${ok?divbar(o.score)+`<div class="small mute">score ${o.score>=0?"+":""}${o.score.toFixed(2)} · confidence ${pct(o.confidence,0)} · ${Math.round(o.latency_ms)} ms</div>`:""}
+    <div class="small" style="margin-top:4px">${esc(o.summary)}</div>
+    ${o.warnings.length?`<div class="small neg">⚠ ${o.warnings.map(esc).join("; ")}</div>`:""}
+    <ul>${o.evidence.slice(0,5).map(e=>`<li>${esc(e.text.length>170?e.text.slice(0,168)+"…":e.text)} ${srcs([e.source_id])}</li>`).join("")}</ul></div>`;
+}
+function priceChart(p){
+  const w=560,h=170,vh=34,n=p.close.length,mn=Math.min(...p.close),mx=Math.max(...p.close),vm=Math.max(...p.volume);
+  const pts=p.close.map((v,i)=>`${(i/(n-1)*w).toFixed(1)},${(h-vh-6-(v-mn)/((mx-mn)||1)*(h-vh-16)).toFixed(1)}`).join(" ");
+  const bars=p.volume.map((v,i)=>`<rect x="${(i/n*w).toFixed(1)}" y="${h-v/vm*vh}" width="${(w/n*.8).toFixed(1)}" height="${(v/vm*vh).toFixed(1)}" fill="var(--mute)" opacity=".5"/>`).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%"><polyline fill="none" stroke="var(--acc)" stroke-width="1.8" points="${pts}"/>${bars}<text x="4" y="12" fill="var(--mute)" font-size="10">${mx.toFixed(0)}</text><text x="4" y="${h-vh-8}" fill="var(--mute)" font-size="10">${mn.toFixed(0)}</text></svg>`;
+}
+
+/* ---------- personalisation ---------- */
+async function rPerson(){
+  const rid=S.rid;
+  if(!S.compare) S.compare = await api("/api/compare",{body:{symbol:S.sym,degradations:[...S.degr]}});
+  if(rid!==S.rid) return;
+  const c=S.compare, u=S.res.user;
+  const mi = AGENTS.map(a=>{const o=c.market_inputs[a];return `<div class="agentcard"><h4>${esc(ANAME[a])}</h4>${chip(o.label,o.score,o.status)} <span class="small mute">score ${o.score>=0?"+":""}${o.score.toFixed(2)} · conf ${pct(o.confidence,0)}</span></div>`}).join("");
+  const cols = c.results.map(x=>{const r=x.recommendation,us=x.user;return `<div class="card" style="margin:0"><h3>${esc(us.name)} <span class="r">${esc(r.profile_label)}</span></h3>
+     <div class="small mute">risk ${us.risk_tolerance}/10 · max position ${us.max_position_pct}% · max vol ${pct(us.max_volatility,0)} · ${us.horizon_years}y</div>
+     <div style="margin:8px 0;font-size:22px">${actionChip(r.action)}</div>
+     <table><tbody>
+      <tr><td class="mute">Composite</td><td class="num"><b>${r.composite>=0?"+":""}${r.composite.toFixed(2)}</b></td></tr>
+      <tr><td class="mute">Confidence</td><td class="num"><b>${pct(r.confidence,0)}</b></td></tr>
+      <tr><td class="mute">Buy / sell thresholds</td><td class="num">${r.thresholds.buy_thr} / ${r.thresholds.sell_thr}</td></tr>
+      <tr><td class="mute">Filings weight</td><td class="num">${pct(r.contributions.find(z=>z.agent==="filings").weight,0)}</td></tr>
+      <tr><td class="mute">Momentum weight</td><td class="num">${pct(r.contributions.find(z=>z.agent==="momentum").weight,0)}</td></tr>
+      <tr><td class="mute">Risk gate</td><td class="num">${esc(r.agents.risk.label)}</td></tr>
+      <tr><td class="mute">Trade</td><td class="num">${r.sizing?`${r.sizing.side} ${r.sizing.qty} sh (${inr(r.sizing.amount)})`:"none"}</td></tr></tbody></table>
+     <div class="small" style="margin-top:6px"><b>Why:</b> ${esc(r.notes[0]||r.disagreement||`composite ${r.composite.toFixed(2)} vs buy ≥ ${r.thresholds.buy_thr} / sell ≤ ${r.thresholds.sell_thr}; confidence ${pct(r.confidence,0)} vs minimum ${pct(r.thresholds.conf_min,0)}`)}</div>
+     <div class="small mute" style="margin-top:4px"><b>Behaviour:</b> ${esc(r.agents.behavior.summary)}</div></div>`}).join("");
+  $("#main").innerHTML = `
+   <div class="card"><h3>Same market inputs → different advice<span class="r"><select id="psym">${S.res.signals.map(s=>`<option ${s.symbol===S.sym?"selected":""}>${s.symbol}</option>`).join("")}</select></span></h3>
+     <div class="small mute" style="margin-bottom:8px">The four market agents ran <b>once</b> for ${c.symbol} (${c.wall_ms} ms incl. per-user agents). Their outputs are identical for every investor; only the personalisation layer (weights, thresholds, limits, behaviour) differs.</div>
+     <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">${mi}</div></div>
+   <div class="grid3">${cols}</div>
+   <div class="grid2" style="margin-top:14px"><div class="card"><h3>Edit ${esc(u.name)}'s profile (persisted in SQLite)</h3>
+     <div class="field"><label>Risk tolerance <b id="rtv">${u.risk_tolerance}</b>/10</label><input type="range" id="rt" min="1" max="10" value="${u.risk_tolerance}"></div>
+     <div class="field"><label>Max single position (%)</label><input type="number" id="mp" value="${u.max_position_pct}" min="2" max="60"></div>
+     <div class="field"><label>Max stock volatility (annualised, %)</label><input type="number" id="mv" value="${Math.round(u.max_volatility*100)}" min="10" max="120"></div>
+     <button class="primary" id="saveprof">Save &amp; re-run</button> <span class="small mute">Move the slider and watch ${c.symbol} flip between WATCH / ACCUMULATE / BUY.</span></div>
+     <div class="card"><h3>Behavioural analytics from trade log</h3>${behaviorCard()}</div></div>`;
+  $("#psym").onchange = e => { S.sym=e.target.value; S.compare=null; render(); };
+  $("#rt").oninput = e => $("#rtv").textContent = e.target.value;
+  $("#saveprof").onclick = async () => { await api("/api/users/"+S.user,{method:"PUT",body:{risk_tolerance:+$("#rt").value,max_position_pct:+$("#mp").value,max_volatility:+$("#mv").value/100}});
+    S.meta.users = (await api("/api/meta")).users; S.compare=null; renderUsers(); await run(); };
+}
+function behaviorCard(){
+  const b=S.res.behavior;
+  return `<div style="font-size:18px;font-weight:650">${esc(b.archetype)}</div><div class="small mute">${b.n_trades} trades · ${b.trades_per_year}/yr · FOMO-buy rate ${pct(b.fomo_buy_rate,0)} · panic-sell rate ${pct(b.panic_sell_rate,0)} · regretted panic sells ${b.regretted_panic_sells}</div>`
+    + (b.evidence.length?`<ul class="small">${b.evidence.map(e=>`<li>${esc(e.text)} <span class="src">${esc(e.id)}</span></li>`).join("")}</ul>`:`<div class="small mute">No impulsive-trade evidence in the log.</div>`);
+}
+
+/* ---------- evaluation ---------- */
+async function rEval(){
+  const rid=S.rid;
+  const m=S.res.metrics, bt = await api("/api/backtest",{method:"GET"});
+  if(rid!==S.rid) return;
+  const pa = Object.entries(m.per_agent).map(([a,v])=>`<tr><td>${esc(ANAME[a])}</td><td class="num">${v.mean_ms??"–"}</td><td class="num">${v.max_ms??"–"}</td><td class="num">${v.ok}/${v.total}</td></tr>`).join("");
+  const dims = ["momentum","volume","sentiment","ensemble"].map(k=>{const v=bt[k];return `<tr><td>${esc(ANAME[k]||"Ensemble (3 dims)")}</td><td class="num">${v.n_signals}</td><td class="num"><b>${pct(v.hit_rate,1)}</b></td><td class="num mute">${pct(v.ci95[0],0)}–${pct(v.ci95[1],0)}</td><td class="num ${v.avg_fwd_bullish>0?"pos":"neg"}">${spct(v.avg_fwd_bullish,2)}</td><td class="num ${v.avg_fwd_bearish<0?"pos":"neg"}">${spct(v.avg_fwd_bearish,2)}</td></tr>`}).join("");
+  const cal = bt.ensemble.calibration.map(c=>`<tr><td>${c.range}</td><td class="num">${c.n}</td><td class="num">${c.hit_rate==null?"–":pct(c.hit_rate,0)}</td><td style="width:140px"><div class="hbar"><i style="width:${(c.hit_rate||0)*100}%"></i></div></td></tr>`).join("");
+  const tr = S.res.trace.map(t=>`<div class="stage"><div class="ms">${t.ms} ms</div><div><b>${esc(t.stage)}</b><div class="small mute">${esc(t.detail)}</div></div></div>`).join("");
+  $("#main").innerHTML = `
+   <div class="grid2"><div>
+    <div class="card"><h3>Session metrics (logged to SQLite + logs/metrics.jsonl)</h3><div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(200px,1fr))">
+      ${[["End-to-end latency",m.e2e_ms+" ms"],["Agent wall-clock",m.agent_wall_ms+" ms"],["Sum of agent latencies",m.agent_latency_sum_ms+" ms"],["Parallel speed-up",m.parallel_speedup+"×"],
+         ["Portfolio concentration",m.concentration_score_before+" → "+m.concentration_score_after],["Portfolio vol / VaR95",pct(m.portfolio_vol_ann,1)+" / "+inr(m.var95_1d)],
+         ["Citation coverage",pct(m.citation_coverage,1)],["Filing quotes verified",m.filing_citations_verified==null?"n/a":pct(m.filing_citations_verified,0)],["Grounded recommendations",pct(m.grounded_recommendations,0)]]
+        .map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v" style="font-size:17px">${x[1]}</div></div>`).join("")}</div></div>
+    <div class="card"><h3>Pipeline stages (this run)</h3>${tr}</div>
+    <div class="card"><h3>Signal accuracy vs 30-day forward returns (back-test)</h3>
+      <table><thead><tr><th>Dimension</th><th class="num">Signals</th><th class="num">Hit rate</th><th class="num">95% CI</th><th class="num">Fwd ret · bullish</th><th class="num">Fwd ret · bearish</th></tr></thead><tbody>${dims}</tbody></table>
+      <div class="small mute" style="margin-top:6px">Period ${esc(bt._meta.period)}, ${bt._meta.n_obs} stock-date observations, sampled every ${bt._meta.sample_step_sessions} sessions. Coin-flip baseline = ${pct(bt._meta.base_rate_up,0)} (share of 30d windows that rose). Method: signal computed using data up to date t only, scored if |score| ≥ ${bt._meta.threshold}.</div>
+      ${bt._meta.caveats.map(c=>`<div class="box">${esc(c)}</div>`).join("")}</div>
+   </div><div>
+    <div class="card"><h3>Agent latency (this run)</h3><table><thead><tr><th>Agent</th><th class="num">Mean ms</th><th class="num">Max ms</th><th class="num">Usable</th></tr></thead><tbody>${pa}</tbody></table>
+       <div class="small mute" style="margin-top:6px">Feeds carry simulated network latency (${Object.entries({prices:70,sentiment:95,filings:80}).map(([k,v])=>k+" "+v+"ms").join(", ")}); that is what parallelism hides.</div></div>
+    <div class="card"><h3>Confidence calibration (ensemble)</h3><table><thead><tr><th>Stated confidence</th><th class="num">n</th><th class="num">Actual hit rate</th><th></th></tr></thead><tbody>${cal}</tbody></table>
+       <div class="small mute" style="margin-top:6px">Each recommendation shows the empirical hit rate of past signals in its confidence bucket, so users see how far to trust the number.</div></div>
+    <div class="card"><h3>Latency under load: sequential vs parallel agents <span class="r"><button class="sm" id="bench">Run benchmark</button></span></h3><div id="benchout" class="small mute">Runs 4 signal agents × N stocks, 3 repeats each.</div></div>
+   </div></div>`;
+  $("#bench").onclick = async () => { $("#benchout").textContent="running (sequential runs are slow by design, ~20 s)…"; const b=await api("/api/benchmark?repeats=2",{method:"GET"}); const mx=Math.max(...b.rows.map(r=>r.sequential_ms));
+    $("#benchout").innerHTML = `<table><thead><tr><th>Stocks</th><th>Sequential</th><th>Parallel</th><th>Parallel + cache</th><th class="num">Feed calls</th></tr></thead><tbody>${b.rows.map(r=>`<tr><td>${r.symbols}<div class="small mute">${r.agent_tasks} tasks</div></td><td><div class="hbar"><i style="width:${r.sequential_ms/mx*100}%;background:var(--neg)"></i></div>${r.sequential_ms} ms</td><td><div class="hbar"><i style="width:${r.parallel_ms/mx*100}%;background:var(--warn)"></i></div>${r.parallel_ms} ms <b>(${r.speedup}×)</b></td><td><div class="hbar"><i style="width:${r.parallel_cached_ms/mx*100}%;background:var(--pos)"></i></div>${r.parallel_cached_ms} ms <b>(${r.speedup_cached}×)</b></td><td class="num small">${r.feed_calls_no_cache} → ${r.feed_calls_cached}</td></tr>`).join("")}</tbody></table>
+      <div class="small mute" style="margin-top:6px">Shared request cache = single-flight: concurrent agents wanting the same price/news/filing payload make one feed call. Running load test…</div>`;
+    const l=await api("/api/benchmark/load",{method:"GET"});
+    $("#benchout").innerHTML += `<b class="small">Concurrent users (each runs a full 72-task analysis)</b><table><thead><tr><th class="num">Users</th><th class="num">p50</th><th class="num">p95</th><th class="num">Throughput</th></tr></thead><tbody>${l.rows.map(r=>`<tr><td class="num">${r.concurrent_users}</td><td class="num">${r.p50_ms} ms</td><td class="num">${r.p95_ms} ms</td><td class="num">${r.throughput_per_s}/s</td></tr>`).join("")}</tbody></table>
+      <b class="small">Worker-pool size (one analysis)</b><table><tbody>${l.pool.map(r=>`<tr><td class="num">${r.workers} workers</td><td><div class="hbar"><i style="width:${r.wall_ms/Math.max(...l.pool.map(x=>x.wall_ms))*100}%"></i></div></td><td class="num">${r.wall_ms} ms</td></tr>`).join("")}</tbody></table>`; };
+  const extra = await evalExtras(bt);
+  if(rid===S.rid) $("#main").insertAdjacentHTML("beforeend", extra);
+}
+
+/* ---------- shared helpers (extensions) ---------- */
+function lineChart(series, w=620, h=200, fmt=v=>v.toFixed(2)){
+  const all=series.flatMap(s=>s.values); const mn=Math.min(...all), mx=Math.max(...all), n=Math.max(...series.map(s=>s.values.length));
+  const X=i=>40+i/(n-1)*(w-50), Y=v=>h-22-(v-mn)/((mx-mn)||1)*(h-36);
+  const lines=series.map(s=>`<polyline fill="none" stroke="${s.color}" stroke-width="${s.width||1.8}" ${s.dash?'stroke-dasharray="4 3"':""} points="${s.values.map((v,i)=>X(i).toFixed(1)+","+Y(v).toFixed(1)).join(" ")}"/>`).join("");
+  const legend=series.map((s,i)=>`<span style="color:${s.color};margin-right:12px">● ${esc(s.name)}</span>`).join("");
+  return `<svg viewBox="0 0 ${w} ${h}" style="width:100%"><text x="2" y="${Y(mx)+4}" fill="var(--mute)" font-size="10">${fmt(mx)}</text><text x="2" y="${Y(mn)+4}" fill="var(--mute)" font-size="10">${fmt(mn)}</text>
+    <line x1="40" x2="${w-10}" y1="${Y(1)}" y2="${Y(1)}" stroke="var(--line)" stroke-dasharray="2 3"/>${lines}</svg><div class="small">${legend}</div>`;
+}
+const SERIES_COL = ["#5b9cf5","#2ea36b","#e3a008","#e5534b","#a371f7"];
+function heat(v){const a=Math.min(1,Math.abs(v));return v>=0?`rgba(229,83,75,${a*.7})`:`rgba(91,156,245,${a*.7})`}
+
+/* ---------- alerts & watchlist (dashboard) ---------- */
+function alertsHtml(){
+  const r=S.res, meta=r.alerts_meta;
+  const items=r.alerts.map(a=>`<div class="alert ${a.severity}"><b>${a.severity.toUpperCase()}</b>${a.is_new?` <span class="chip warn">NEW</span>`:""} · ${esc(a.text)}<div class="small mute">why it fires for you: ${esc(a.why)}</div></div>`).join("");
+  const res = meta.resolved_ids.length ? `<div class="small mute" style="margin-top:6px">Cleared since your last session: ${meta.resolved_ids.map(i=>esc(i.replace(/:+$/,""))).join(" · ")}</div>`:"";
+  return (items||'<div class="mute">No alerts under your rules.</div>')+res;
+}
+function watchCard(){
+  const r=S.res, by=Object.fromEntries(r.recommendations.map(x=>[x.symbol,x]));
+  const rows=r.watchlist.map(s=>{const x=by[s]; return `<tr class="click" data-sym="${s}" data-go="analysis"><td><b>${s}</b></td><td>${actionChip(x.action)}</td><td class="num">${x.composite>=0?"+":""}${x.composite.toFixed(2)}</td><td class="num">${pct(x.confidence,0)}</td><td class="small mute">${esc(x.uncertainty.level)} uncertainty</td><td><button class="sm" data-unwatch="${s}">✕</button></td></tr>`}).join("");
+  const opts=r.signals.filter(s=>!r.watchlist.includes(s.symbol)).map(s=>`<option>${s.symbol}</option>`).join("");
+  return `<div class="card"><h3>${esc(r.user.name.split(" ")[0])}'s watchlist<span class="r"><select id="wadd">${opts}</select> <button class="sm" id="wbtn">Add</button></span></h3>
+    <table><tbody>${rows||'<tr><td class="mute">Empty</td></tr>'}</tbody></table></div>`;
+}
+function bindWatch(){
+  document.querySelectorAll("[data-unwatch]").forEach(b=>b.onclick=async e=>{e.stopPropagation(); await setWatch(S.res.watchlist.filter(x=>x!==b.dataset.unwatch));});
+  const a=document.getElementById("wbtn"); if(a) a.onclick=async()=>{const v=document.getElementById("wadd").value; if(v) await setWatch([...S.res.watchlist,v]);};
+}
+async function setWatch(list){ await api("/api/users/"+S.user+"/watchlist",{method:"PUT",body:list}); await run(); }
+
+/* ---------- analysis extras: calibration / uncertainty / counterfactual ---------- */
+function calibCard(r){
+  const c=r.calibrated, u=r.uncertainty;
+  const cf=r.counterfactuals.map(x=>`<tr><td>without ${esc(ANAME[x.without])}</td><td class="num">${x.composite>=0?"+":""}${x.composite.toFixed(2)}</td><td class="num ${x.delta>=0?"pos":"neg"}">${x.delta>=0?"+":""}${x.delta.toFixed(2)}</td><td>${x.decisive?`<span class="chip warn">flips verdict → ${x.zone}</span>`:`<span class="mute small">${x.zone}</span>`}</td></tr>`).join("");
+  return `<div class="card"><h3>Confidence calibration &amp; uncertainty</h3>
+    <div style="display:flex;gap:18px;flex-wrap:wrap"><div><div class="mute small">Raw agent confidence</div><div style="font-size:20px;font-weight:650">${pct(r.confidence,0)}</div></div>
+    <div><div class="mute small">Calibrated P(direction right, 30d)</div><div style="font-size:20px;font-weight:650">${pct(c.p,0)} <span class="small mute">(${pct(c.lo,0)}–${pct(c.hi,0)})</span></div></div>
+    <div><div class="mute small">Uncertainty</div><div style="font-size:20px;font-weight:650"><span class="chip ${u.level==="High"?"neg":u.level==="Medium"?"warn":"pos"}">${u.level}</span></div></div></div>
+    <div class="small mute" style="margin-top:6px">Isotonic calibration fitted on ${c.n} back-test signals with a 90% bootstrap band. Drivers: ${u.drivers.length?u.drivers.map(esc).join(", "):"none"} · agent disagreement ${u.disagreement} · data gaps ${u.missing_or_degraded_data}</div>
+    ${cf?`<div style="margin-top:8px"><b class="small">Which agent drives the verdict? (leave-one-out)</b><table><tbody>${cf}</tbody></table></div>`:""}</div>`;
+}
+
+/* ---------- portfolio risk & alerts tab ---------- */
+function rRisk(){
+  const r=S.res, p=r.portfolio, k=p.risk, u=r.user;
+  if(!k.contributions || !k.contributions.length){ $("#main").innerHTML='<div class="box">No positions.</div>'; return; }
+  const kp=[["Volatility (ann.)",pct(k.vol_ann,1)],["Beta vs market",k.beta.toFixed(2)],["Diversification ratio",k.diversification_ratio.toFixed(2)],["VaR 95% (1d, hist.)",inr(k.var95_hist)],["VaR 99% (1d)",inr(k.var99_hist)],["Expected shortfall 95%",inr(k.es95_hist)],["Max drawdown (current weights)",pct(k.max_drawdown,1)],["Avg pairwise correlation",k.avg_pair_corr.toFixed(2)]]
+    .map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v" style="font-size:17px">${x[1]}</div></div>`).join("");
+  const contrib=k.contributions.map(c=>`<tr><td><b>${c.symbol}</b></td><td style="width:34%"><div class="hbar" title="weight"><i style="width:${Math.min(100,c.weight*100*2)}%"></i></div><span class="small mute">${pct(c.weight,0)} of value</span></td><td style="width:34%"><div class="hbar"><i style="width:${Math.min(100,c.risk_share*100)}%;background:${c.risk_share*100>S.res.alerts_meta.rules.max_risk_share_pct?"var(--neg)":"var(--warn)"}"></i></div><span class="small mute">${pct(c.risk_share,0)} of risk</span></td><td class="num small mute">β ${c.beta.toFixed(2)} · σ ${pct(c.vol_ann,0)}</td></tr>`).join("");
+  const stress=k.stress.map(s=>`<tr><td>${esc(s.name)}<div class="small mute">${esc(s.how)}</div></td><td class="num neg"><b>${inr(s.loss)}</b></td><td class="num">${pct(s.loss/p.total,1)}</td></tr>`).join("");
+  const syms=k.corr.symbols, mat=k.corr.matrix;
+  const heatT=`<table class="small" style="width:auto"><thead><tr><th></th>${syms.map(s=>`<th style="padding:3px 4px">${s.slice(0,5)}</th>`).join("")}</tr></thead><tbody>${mat.map((row,i)=>`<tr><th style="padding:3px 4px">${syms[i].slice(0,6)}</th>${row.map(v=>`<td style="padding:3px 6px;text-align:center;background:${heat(v)}">${v.toFixed(2)}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
+  const secs=Object.entries(p.sector_weights).map(([s,v])=>`<div class="small" style="display:flex;gap:8px;align-items:center"><span style="width:110px">${esc(s)}</span><div class="hbar" style="flex:1"><i style="width:${Math.min(100,v*100/u.max_sector_pct*100)}%;background:${v*100>u.max_sector_pct?"var(--neg)":"var(--acc)"}"></i></div><span class="mute" style="width:100px;text-align:right">${pct(v,0)} / ${u.max_sector_pct}%</span></div>`).join("");
+  const rules=r.alerts_meta.rules, help=S.meta.alert_rule_help;
+  const ruleIn=Object.keys(rules).map(key=>`<div class="field"><label><span>${esc(help[key])}</span><input type="number" step="any" data-rule="${key}" value="${rules[key]}" style="width:90px"></label></div>`).join("");
+  $("#main").innerHTML=`<div class="kpis">${kp}</div>
+   <div class="grid2"><div>
+    <div class="card"><h3>Where the risk really sits <span class="r mute small">share of portfolio variance vs share of value</span></h3><table><tbody>${contrib}</tbody></table>
+      <div class="small mute" style="margin-top:6px">Concentration score ${p.concentration_score} (stocks ${p.stock_concentration}, sectors ${p.sector_concentration}). ${k.top_risk_symbol} alone explains ${pct(k.top_risk_share,0)} of risk.</div></div>
+    <div class="card"><h3>Stress tests</h3><table><thead><tr><th>Scenario</th><th class="num">Loss</th><th class="num">% of portfolio</th></tr></thead><tbody>${stress}</tbody></table></div>
+    <div class="card"><h3>Correlation of holdings (120 sessions)</h3><div style="overflow:auto">${heatT}</div></div>
+    <div class="card"><h3>Sector exposure monitor</h3>${secs}${p.limit_flags.map(f=>`<div class="alert high">${esc(f.text)}</div>`).join("")}</div>
+   </div><div>
+    <div class="card"><h3>Alerts for ${esc(u.name.split(" ")[0])}</h3>${alertsHtml()}</div>
+    ${watchCard()}
+    <div class="card"><h3>Your alert rules (persisted)</h3>${ruleIn}<button class="primary" id="saverules">Save rules &amp; re-run</button>
+      <div class="small mute" style="margin-top:6px">Alerts are tagged NEW when they were not present in your previous session.</div></div>
+   </div></div>`;
+  document.getElementById("saverules").onclick=async()=>{const body={}; document.querySelectorAll("[data-rule]").forEach(i=>body[i.dataset.rule]=+i.value); await api("/api/users/"+S.user+"/alert_rules",{method:"PUT",body}); await run();};
+  bindWatch();
+}
+
+/* ---------- semantic search tab ---------- */
+async function rSearch(){
+  const rid=S.rid;
+  const st=await api("/api/rag/stats",{method:"GET"}); S.rag=st;
+  if(rid!==S.rid) return;
+  const ev=st.eval.sets, evrows=Object.entries(ev).map(([k,v])=>`<tr><td>${k} <span class="mute small">(${v.n} queries)</span></td>${["bm25","vector","hybrid"].map(m=>`<td class="num">${pct(v[m]["recall@3"],0)} / ${v[m].mrr.toFixed(2)}</td>`).join("")}</tr>`).join("");
+  $("#main").innerHTML=`<div class="grid2"><div>
+    <div class="card"><h3>Semantic search over the filing corpus</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="sq" value="regulator questioned undisclosed dealings with affiliates" style="flex:1;min-width:260px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 10px">
+        <select id="ssym"><option value="">all companies</option>${S.meta.universe.map(u=>`<option>${u.symbol}</option>`).join("")}</select>
+        <select id="sdoc"><option value="">all document types</option><option>Earnings Transcript</option><option>SEBI Filing</option><option>Annual Report</option><option>Sector Note</option></select>
+        <select id="smode"><option>hybrid</option><option>vector</option><option>bm25</option></select>
+        <input type="date" id="sdate" title="published on/after" style="background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:4px"> <label class="small"><input type="checkbox" id="srec"> prefer recent</label>
+        <button class="primary" id="sgo">Search</button> <button id="scmp">Compare modes</button></div>
+      <div class="small mute" style="margin-top:6px">Try: <a href="#" data-q="creditors worried about heavy borrowing">creditors worried about heavy borrowing</a> · <a href="#" data-q="carmaker pulls back vehicles over defective safety part">carmaker pulls back vehicles over defective safety part</a> · <a href="#" data-q="American inspectors criticised factory data practices">American inspectors criticised factory data practices</a></div>
+      <div id="sres" style="margin-top:10px"></div></div>
+   </div><div>
+    <div class="card"><h3>Vector index</h3><table><tbody>
+      <tr><td class="mute">Vector database</td><td><b>${esc(st.backend)}</b>${st.persisted?` <span class="chip pos">persistent</span>`:""}${st.reused_from_disk?` <span class="chip pos">vectors reloaded from disk</span>`:""}</td></tr>
+      <tr><td class="mute">Documents / passages</td><td><b>${st.documents}</b> / <b>${st.passages}</b> across ${st.companies} companies</td></tr>
+      <tr><td class="mute">Embedding</td><td>LSA, ${st.embedding_dim} dims, vocab ${st.vocab}</td></tr>
+      <tr><td class="mute">Coverage</td><td>${esc(st.date_range[0])} → ${esc(st.date_range[1])}</td></tr>
+      <tr><td class="mute">Index build</td><td>${st.index_ms} ms</td></tr></tbody></table>
+      ${st.note?`<div class="box">${esc(st.note)}</div>`:""}
+      <div class="small mute" style="margin-top:6px">${Object.entries(st.by_type).map(([k,v])=>`${esc(k)}: ${v}`).join(" · ")}</div></div>
+    <div class="card"><h3>Retrieval quality (recall@3 / MRR)</h3><table><thead><tr><th>Query set</th><th class="num">BM25</th><th class="num">Vector</th><th class="num">Hybrid</th></tr></thead><tbody>${evrows}</tbody></table>
+      <div class="small mute" style="margin-top:6px">${st.eval.n_queries} hand-labelled queries searched over all ${st.eval.corpus_passages} passages without a company filter. "Paraphrase" queries share almost no words with the target passage. Small set; the LSA glossary was written by us, so treat the gain as indicative.</div></div>
+   </div></div>`;
+  const go=async()=>{
+    if(!$("#sres")) return;
+    const p=new URLSearchParams({q:$("#sq").value,mode:$("#smode").value,k:6}); if($("#ssym").value)p.set("symbol",$("#ssym").value); if($("#sdoc").value)p.set("doc_type",$("#sdoc").value); if($("#sdate").value)p.set("date_from",$("#sdate").value); if($("#srec").checked)p.set("recency","true");
+    const r=await api("/api/rag/search?"+p,{method:"GET"}); $("#sres").innerHTML=`<div class="small mute">${r.hits.length} results · ${r.ms} ms · ${esc(r.backend)} · mode ${r.mode}</div>`+hitsHtml(r.hits);};
+  $("#sgo").onclick=go; $("#sq").onkeydown=e=>{if(e.key==="Enter")go()};
+  document.querySelectorAll("[data-q]").forEach(a=>a.onclick=e=>{e.preventDefault();$("#sq").value=a.dataset.q;go();});
+  $("#scmp").onclick=async()=>{const cols=await Promise.all(["bm25","vector","hybrid"].map(async m=>{const p=new URLSearchParams({q:$("#sq").value,mode:m,k:3}); if($("#ssym").value)p.set("symbol",$("#ssym").value); return [m,await api("/api/rag/search?"+p,{method:"GET"})]}));
+    $("#sres").innerHTML=`<div class="grid3">${cols.map(([m,r])=>`<div><b>${m}</b> <span class="mute small">${r.ms} ms</span>${r.hits.length?hitsHtml(r.hits,true):'<div class="mute small">no results</div>'}</div>`).join("")}</div>`;};
+  go();
+}
+function hitsHtml(hits,compact){
+  return hits.map(h=>`<div class="quote"><span class="src" data-src="${esc(h.chunk_id)}">${esc(h.chunk_id)}</span> <b class="small">${esc(h.title)}</b>
+    <div class="small mute">${esc(h.doc_type)} · ${esc(h.date)}${h.period?" · "+esc(h.period):""} · ${esc(h.heading)} · score <b>${h.score}</b> (bm25 ${h.bm25} · vector ${h.vector})</div>${compact?"":`<div class="small">${esc(h.text)}</div>`}</div>`).join("");
+}
+
+/* ---------- live data tab ---------- */
+async function rLive(){
+  if(!S.live) S.live={tickers:S.meta.live_defaults.join(", "), data:null, busy:false};
+  const L=S.live;
+  const body = L.data ? liveBody(L.data) : `<div class="mute">Press <b>Fetch live data</b>. Sources: Yahoo Finance (prices), NSE corporate announcements (disclosures &amp; earnings notices), Google News (headlines).</div>`;
+  $("#main").innerHTML=`<div class="card"><h3>Live market data <span class="r mute small">real NSE tickers · same six agents, same contract</span></h3>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="ltk" value="${esc(L.tickers)}" style="flex:1;min-width:260px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 10px">
+    <button class="primary" id="lgo" ${L.busy?"disabled":""}>${L.busy?"Fetching…":"Fetch live data"}</button></div>
+    <div class="small mute" style="margin-top:6px">Advice is personalised to <b>${esc(S.res.user.name)}</b> (${esc(S.res.recommendations[0].profile_label)}). Degraded-data toggles above also apply here.</div></div>${body}`;
+  $("#lgo").onclick=async()=>{L.tickers=$("#ltk").value; L.busy=true; rLive(); try{ L.data=await api("/api/live",{body:{user_id:S.user,tickers:L.tickers.split(/[ ,]+/).filter(Boolean),degradations:[...S.degr]}}); }catch(e){ L.data={error:e.message}; } L.busy=false; rLive();};
+}
+function liveBody(d){
+  if(d.error) return `<div class="box">${esc(d.error)}</div>`;
+  const src=Object.entries(d.sources).map(([k,v])=>`<span class="chip ${v.ok?"pos":"neg"}" title="${esc(v.detail)} · ${v.ms} ms">${v.ok?"●":"✕"} ${esc(k)}</span>`).join(" ");
+  const errs=Object.entries(d.fetch_errors).map(([k,v])=>`<div class="box">${esc(k)} disclosures: ${esc(v)}</div>`).join("");
+  const cards=d.tickers.map(t=>{const r=t.recommendation, a=r.agents;
+    const chips=AGENTS.map(k=>`<div style="min-width:120px"><div class="small mute">${ANAME[k]}</div>${chip(a[k].label,a[k].score,a[k].status)}${["ok","degraded"].includes(a[k].status)?cbar(a[k].confidence):""}</div>`).join("");
+    const hl=t.headlines.slice(0,4).map(h=>`<li class="small"><a href="${esc(h.url)}" target="_blank" rel="noopener" style="color:var(--acc)">${esc(h.text)}</a> <span class="mute">${esc(h.source)} · ${esc(h.date)}</span></li>`).join("");
+    const ea=t.earnings_and_actions.slice(0,5).map(e=>`<li class="small"><span class="mute">${esc(e.date)}</span> <b>${esc(e.kind)}</b> ${e.url?`<a href="${esc(e.url)}" target="_blank" rel="noopener" style="color:var(--acc)">${esc(e.text.slice(0,140))}</a>`:esc(e.text.slice(0,140))}</li>`).join("");
+    const fil=(a.filings.citations||[]).slice(0,3).map(c=>`<li class="small"><a href="${esc(c.url)}" target="_blank" rel="noopener" style="color:var(--acc)">${esc(c.title)}</a> ${c.verified?'<span class="chip pos">✓ verified</span>':""}<div class="mute">${esc(c.snippet.slice(0,160))}</div></li>`).join("");
+    return `<div class="card"><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap"><b style="font-size:17px">${esc(t.symbol)}</b><span class="mute">${esc(t.name)}</span>
+      <span>${t.price?inr2(t.price):"price n/a"}</span>${t.chg_1d!=null?`<span class="${t.chg_1d>=0?"pos":"neg"}">${spct(t.chg_1d,2)} 1d · ${spct(t.chg_20d)} 20d</span>`:""}${t.spark.length?spark(t.spark):""}
+      <div class="sp"></div>${actionChip(r.action)} <span class="small mute">composite ${r.composite>=0?"+":""}${r.composite.toFixed(2)} · conf ${pct(r.confidence,0)} · ${r.grounded?"grounded in live filings":'<span class="neg">ungrounded</span>'}</span></div>
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin:10px 0">${chips}</div>
+      ${r.conflicts.length?`<div class="box"><b>Agents disagree.</b> ${esc(r.disagreement)}</div>`:""}${r.notes.map(n=>`<div class="box info">${esc(n)}</div>`).join("")}${r.warnings.length?`<div class="box">${r.warnings.map(esc).join(" · ")}</div>`:""}
+      <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr))"><div><b class="small">Headlines (Google News)</b><ul>${hl||'<li class="small mute">none</li>'}</ul></div>
+      <div><b class="small">Earnings &amp; corporate actions (NSE / Yahoo)</b><ul>${ea||'<li class="small mute">none found</li>'}</ul></div>
+      <div><b class="small">Cited disclosures (${t.n_disclosures} fetched)</b><ul>${fil||'<li class="small mute">none</li>'}</ul></div></div></div>`}).join("");
+  return `<div class="card"><h3>Source status <span class="r mute small">${d.e2e_ms} ms end-to-end · ${d.agents_usable}/${d.agents_total} agents usable</span></h3>${src}${errs}
+    <div class="small mute" style="margin-top:6px">${d.limits.map(esc).join(" · ")}</div></div>${cards}`;
+}
+
+/* ---------- sessions & changes tab ---------- */
+async function rHist(){
+  const rid=S.rid;
+  const [h,tl]=await Promise.all([api("/api/users/"+S.user+"/history",{method:"GET"}), api("/api/users/"+S.user+"/timeline",{method:"GET"})]);
+  if(rid!==S.rid) return;
+  const ds=tl.decision_stats;
+  const entry=e=>{const d=e.diff; const bits=[];
+    if(d){ d.positions.forEach(p=>bits.push(`<span class="chip ${p.change==="closed"?"neg":"pos"}">${p.change} ${esc(p.symbol)} ${p.qty>0?"+":""}${p.qty}</span>`));
+      if(d.cash_delta) bits.push(`<span class="chip neu">cash ${d.cash_delta>0?"+":""}${inr(d.cash_delta)}</span>`);
+      if(d.concentration_delta) bits.push(`<span class="chip neu">concentration ${d.concentration_delta>0?"+":""}${d.concentration_delta}</span>`);
+      d.recommendation_changes.forEach(c=>bits.push(`<span class="chip warn">${esc(c.symbol)}: ${c.from} → ${c.to}</span>`));
+      d.behavior_changes.forEach(c=>bits.push(`<span class="chip warn">${esc(c)}</span>`));
+      d.new_alerts.forEach(a=>bits.push(`<span class="chip neg">new alert ${esc(a.replace(/:+$/,""))}</span>`));
+      d.cleared_alerts.forEach(a=>bits.push(`<span class="chip pos">cleared ${esc(a.replace(/:+$/,""))}</span>`)); }
+    return `<div style="padding:8px 0;border-bottom:1px solid var(--line)"><b>Session #${e.session_id}</b> <span class="mute small">${new Date(e.ts*1000).toLocaleString()} · value ${inr(e.total)} · concentration ${e.concentration} · ${esc(e.archetype)} · ${e.n_alerts} alerts</span>
+      <div style="margin-top:4px">${bits.join(" ")||(d?'<span class="small mute">no change since the previous session</span>':'<span class="small mute">first session (baseline)</span>')}</div>
+      ${e.decisions.length?`<div class="small" style="margin-top:4px">Your decisions on this session's advice: ${e.decisions.map(x=>`${esc(x.symbol)} ${esc(x.action)} → <b>${esc(x.choice)}</b>`).join(", ")}</div>`:""}</div>`};
+  const bs=tl.behavior_series;
+  const bchart = bs.length>1 ? lineChart([{name:"FOMO-buy rate",color:"#e3a008",values:bs.map(x=>x.fomo_buy_rate)},{name:"panic-sell rate",color:"#e5534b",values:bs.map(x=>x.panic_sell_rate)}],560,130,v=>pct(v,0)) : '<div class="small mute">Run at least two sessions (and log trades) to see behavioural drift.</div>';
+  const tt=h.trades.slice().reverse().map(t=>`<tr><td class="small">${esc(t.ts)}</td><td>${esc(t.symbol)}</td><td>${esc(t.side)}</td><td class="num">${t.qty}</td><td class="num">${inr2(t.price)}</td><td class="small mute">${esc(t.note)}</td></tr>`).join("");
+  const dd=h.decisions.map(d=>`<tr><td>${esc(d.symbol)}</td><td>${actionChip(d.action)}</td><td>${esc(d.choice)}</td><td class="small mute">${new Date(d.ts*1000).toLocaleTimeString()}</td></tr>`).join("");
+  $("#main").innerHTML=`<div class="grid2"><div>
+    <div class="card"><h3>What changed since the last session <span class="r mute small">snapshots persisted in SQLite</span></h3>${tl.entries.map(entry).join("")||'<div class="mute">No sessions yet - press Run analysis.</div>'}</div>
+    <div class="card"><h3>Recent trade log (input to behavioural analytics)</h3><table><thead><tr><th>Date</th><th>Stock</th><th>Side</th><th class="num">Qty</th><th class="num">Price</th><th>Note</th></tr></thead><tbody>${tt}</tbody></table></div>
+   </div><div>
+    <div class="card"><h3>Behavioural pattern over time</h3>${bchart}<div class="small mute" style="margin-top:6px">Current archetype: <b>${esc(S.res.behavior.archetype)}</b></div></div>
+    <div class="card"><h3>Your decisions on advice</h3><div class="small mute" style="margin-bottom:6px">${ds.total?`Accepted ${ds.accepted} of ${ds.total} (${pct(ds.accept_rate,0)}).`:"None recorded yet."}</div>
+      <table><tbody>${dd||'<tr><td class="mute">Accept or ignore a recommendation on the Dashboard to record one.</td></tr>'}</tbody></table></div>
+    <div class="card"><h3>Place a paper trade (updates holdings &amp; cash)</h3>
+      <select id="tsym">${S.res.signals.map(s=>`<option>${s.symbol}</option>`).join("")}</select>
+      <select id="tside"><option>BUY</option><option>SELL</option></select>
+      <input type="number" id="tqty" value="10" min="1" style="width:80px"> <button class="primary" id="tgo">Execute at last close</button>
+      <div id="tmsg" class="small mute" style="margin-top:6px">The next analysis session will show the position change as a diff.</div></div></div></div>`;
+  $("#tgo").onclick=async()=>{ try{ const r=await api("/api/users/"+S.user+"/trades",{body:{symbol:$("#tsym").value,side:$("#tside").value,qty:+$("#tqty").value}}); $("#tmsg").textContent="Executed. Cash now "+inr(r.cash)+". Running analysis…"; await run(); S.tab="hist"; renderTabs(); rHist(); }catch(e){ $("#tmsg").textContent=e.message; } };
+}
+
+/* ---------- evaluation extras ---------- */
+async function evalExtras(bt){
+  const [st]=await Promise.all([api("/api/strategy",{method:"GET"})]);
+  const cm=bt.calibration_model, runs=Object.values(st.runs);
+  const cols=SERIES_COL;
+  const eq=lineChart([...runs.map((r,i)=>({name:`${r.label} (risk ${r.risk_tolerance})`,color:cols[i],values:[1,...r.equity]})),{name:"equal-weight benchmark",color:"#8b98a9",values:[1,...runs[0].benchmark_equity],dash:true}],620,210);
+  const mrow=r=>`<tr><td>${esc(r.label)}</td><td class="num">${spct(r.metrics.total_return,0)}</td><td class="num">${r.metrics.sharpe.toFixed(2)}</td><td class="num">${pct(r.metrics.vol,0)}</td><td class="num neg">${pct(r.metrics.max_drawdown,0)}</td><td class="num">${pct(r.metrics.avg_exposure,0)}</td><td class="num">${pct(r.metrics.avg_turnover,0)}</td></tr>`;
+  const bm=runs[0].benchmark_metrics, brow=`<tr><td>Equal-weight benchmark</td><td class="num">${spct(bm.total_return,0)}</td><td class="num">${bm.sharpe.toFixed(2)}</td><td class="num">${pct(bm.vol,0)}</td><td class="num neg">${pct(bm.max_drawdown,0)}</td><td class="num">100%</td><td class="num">–</td></tr>`;
+  const curve=cm.curve, w=300,h=150, X=c=>34+(c-0.15)/0.8*(w-44), Y=p=>h-20-(p-0.4)/0.4*(h-30);
+  const band=curve.map(c=>`${X(c.conf).toFixed(1)},${Y(Math.min(.8,Math.max(.4,c.hi))).toFixed(1)}`).join(" ")+" "+curve.slice().reverse().map(c=>`${X(c.conf).toFixed(1)},${Y(Math.min(.8,Math.max(.4,c.lo))).toFixed(1)}`).join(" ");
+  const cc=`<svg viewBox="0 0 ${w} ${h}" style="width:100%"><polygon points="${band}" fill="var(--acc)" opacity=".2"/><polyline fill="none" stroke="var(--acc)" stroke-width="2" points="${curve.map(c=>X(c.conf).toFixed(1)+","+Y(Math.min(.8,Math.max(.4,c.p))).toFixed(1)).join(" ")}"/>
+    <line x1="34" x2="${w-10}" y1="${Y(.5)}" y2="${Y(.5)}" stroke="var(--line)" stroke-dasharray="3 3"/><text x="2" y="${Y(.5)+3}" fill="var(--mute)" font-size="9">50%</text><text x="2" y="${Y(.7)+3}" fill="var(--mute)" font-size="9">70%</text>
+    <text x="34" y="${h-4}" fill="var(--mute)" font-size="9">raw confidence 0.15 → 0.95</text></svg>`;
+  const rel=(cm.reliability||[]).map(r=>`<tr><td class="num">${r.n}</td><td class="num">${pct(r.mean_raw_conf,0)}</td><td class="num">${pct(r.mean_calibrated,0)}</td><td class="num"><b>${pct(r.actual,0)}</b></td></tr>`).join("");
+  return `<div class="grid2"><div>
+    <div class="card"><h3>Personalised strategy back-test <span class="r mute small">weekly rebalance, ${(st.cost_per_turnover*100).toFixed(1)}% cost on turnover</span></h3>${eq}
+      <table><thead><tr><th>Strategy</th><th class="num">Return</th><th class="num">Sharpe</th><th class="num">Vol</th><th class="num">Max DD</th><th class="num">Invested</th><th class="num">Turnover</th></tr></thead><tbody>${runs.map(mrow).join("")}${brow}</tbody></table>
+      <div class="box">${esc(st.caveat)} ${esc(runs[0].note)}</div></div></div><div>
+    <div class="card"><h3>Confidence calibration &amp; uncertainty</h3>${cc}
+      <table style="margin-top:6px"><tbody><tr><td class="mute">Expected calibration error (out-of-sample)</td><td class="num">raw <b>${cm.ece_raw}</b> → calibrated <b>${cm.ece_calibrated}</b></td></tr>
+      <tr><td class="mute">Brier score (lower is better)</td><td class="num">raw ${cm.brier_raw} · calibrated <b>${cm.brier_calibrated}</b> · climatology ${cm.brier_climatology}</td></tr>
+      <tr><td class="mute">Fitted on / tested on</td><td class="num">${cm.n_train} / ${cm.n_test} signals (time split 60/40)</td></tr></tbody></table>
+      <table class="small" style="margin-top:6px"><thead><tr><th class="num">n</th><th class="num">raw conf</th><th class="num">calibrated</th><th class="num">actual hit rate</th></tr></thead><tbody>${rel}</tbody></table>
+      <div class="small mute" style="margin-top:6px">Line = isotonic fit of P(direction right) vs raw confidence, shrunk toward the base rate; shaded = 90% bootstrap band. Calibrated Brier ≈ climatology means the confidence number carries little extra information beyond the base rate - reported honestly rather than hidden.</div></div>
+   </div></div>`;
+}
+
+/* ---------- modals ---------- */
+async function openSource(id){
+  const m=$("#modalin");
+  if(id.includes("#")){
+    const docId=id.split("#")[0], idx=+id.split("#")[1]; let d;
+    try { d=await api("/api/docs/"+encodeURIComponent(docId),{method:"GET"}); } catch(e){ return openSource("~"+id); }
+    const cit = Object.values(S.res.recommendations.find(r=>r.symbol===S.sym)?.citations||{}).find(c=>c.source_id===id);
+    const quote = cit?.snippet||"";
+    m.innerHTML = `<div class="doc"><div style="display:flex;gap:8px"><b>${esc(d.title)}</b><span class="sp"></span><button class="sm" onclick="document.getElementById('modal').classList.remove('on')">Close</button></div>
+      <div class="small mute">${esc(d.doc_type)} · ${esc(d.date)} · <span class="chip warn">${esc(d.source_ref)}</span></div>
+      ${d.sections.map((s,i)=>{let t=esc(s.text); if(i===idx&&quote){const q=esc(quote); t=t.includes(q)?t.replace(q,`<mark>${q}</mark>`):t;} return `<div class="sec" style="${i===idx?"border-color:var(--acc)":""}"><h4 style="margin:0 0 4px">${esc(s.heading)} <span class="mute small">${d.doc_id}#${i}${i===idx?" · cited passage":""}</span></h4><p>${t}</p></div>`}).join("")}</div>`;
+  } else {
+    id = id.replace(/^~/,"");
+    const all = [...S.res.recommendations, ...(S.live&&S.live.data&&S.live.data.tickers?S.live.data.tickers.map(t=>t.recommendation):[])];
+    const c = all.flatMap(r=>Object.values(r.citations)).find(c=>c.source_id===id);
+    m.innerHTML = `<div style="display:flex"><b>${esc(id)}</b><span class="sp"></span><button class="sm" onclick="document.getElementById('modal').classList.remove('on')">Close</button></div>
+      ${c?`<div class="quote"><b>${esc(c.title)}</b><div class="small mute">${esc(c.kind)} · ${esc(c.date||"")}</div><div class="small">${esc(c.snippet)}</div>${c.url&&c.url.startsWith("http")?`<div class="small"><a href="${esc(c.url)}" target="_blank" rel="noopener" style="color:var(--acc)">Open original source ↗</a></div>`:""}</div>`:`<div class="mute">No metadata for this source.</div>`}`;
+  }
+  $("#modal").classList.add("on");
+}
+async function showArch(){
+  const t = await (await fetch("/api/architecture")).text();
+  $("#modalin").innerHTML = `<div style="display:flex"><b>Architecture &amp; decision logic</b><span class="sp"></span><button class="sm" onclick="document.getElementById('modal').classList.remove('on')">Close</button></div><pre class="md">${esc(t)}</pre>`;
+  $("#modal").classList.add("on");
+}
+boot().catch(e => { document.body.insertAdjacentHTML("beforeend", `<pre style="color:#e5534b;padding:20px">${esc(e.stack||e)}</pre>`); });
+</script>
+</body>
+</html>
