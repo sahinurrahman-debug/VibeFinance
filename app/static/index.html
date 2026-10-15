@@ -349,6 +349,9 @@ body.anon #acct,body.anon #run,body.anon #arch,body.anon nav,body.anon #degr,bod
 .toast button{margin-left:auto;min-height:0;padding:0 6px;border:0;background:none;color:var(--mute);box-shadow:none}
 @media(max-width:1400px){.acct{order:3;flex:1 1 100%;max-width:none}}
 @media(max-width:700px){.acct .chip-user{flex:1}}
+/* Eight risk metrics = a symmetric 4 x 2 grid (2 x 4 on phones) */
+.kpis-4{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr}
+@media(max-width:700px){.kpis-4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 </style>
 </head>
 <body>
@@ -945,7 +948,7 @@ function calibCard(r){
 function rRisk(){
   const r=S.res, p=r.portfolio, k=p.risk, u=r.user;
   if(!k.contributions || !k.contributions.length){ $("#main").innerHTML=`<div class="card">${empty("list","No holdings yet","Place a paper trade in Sessions & changes to unlock portfolio risk analytics.",["Open Sessions","id=gohist"])}</div>`; $("#gohist").onclick=()=>{S.tab="hist";S.animate=true;renderTabs();render();}; return; }
-  const kp=[["Volatility (ann.)",pct(k.vol_ann,1)],["Beta vs market",k.beta.toFixed(2)],["Diversification ratio",k.diversification_ratio.toFixed(2)],["VaR 95% (1d, hist.)",inr(k.var95_hist)],["VaR 99% (1d)",inr(k.var99_hist)],["Expected shortfall 95%",inr(k.es95_hist)],["Max drawdown (current weights)",pct(k.max_drawdown,1)],["Avg pairwise correlation",k.avg_pair_corr.toFixed(2)]]
+  const kp=[["Volatility (ann.)",pct(k.vol_ann,1)],["Beta vs market",k.beta.toFixed(2)],["Diversification ratio",k.diversification_ratio.toFixed(2)],["VaR 95% (1d, hist.)",inr(k.var95_hist)],["VaR 99% (1d)",inr(k.var99_hist)],["Expected shortfall 95%",inr(k.es95_hist)],["Max drawdown",pct(k.max_drawdown,1)],["Avg correlation",k.avg_pair_corr.toFixed(2)]]
     .map(x=>`<div class="kpi"><div class="l">${x[0]}</div><div class="v" style="font-size:17px">${x[1]}</div></div>`).join("");
   const contrib=k.contributions.map(c=>`<tr><td><b>${c.symbol}</b></td><td style="width:34%"><div class="hbar" title="weight"><i style="width:${Math.min(100,c.weight*100*2)}%"></i></div><span class="small mute">${pct(c.weight,0)} of value</span></td><td style="width:34%"><div class="hbar"><i style="width:${Math.min(100,c.risk_share*100)}%;background:${c.risk_share*100>S.res.alerts_meta.rules.max_risk_share_pct?"var(--neg)":"var(--warn)"}"></i></div><span class="small mute">${pct(c.risk_share,0)} of risk</span></td><td class="num small mute">β ${c.beta.toFixed(2)} · σ ${pct(c.vol_ann,0)}</td></tr>`).join("");
   const stress=k.stress.map(s=>`<tr><td>${esc(s.name)}<div class="small mute">${esc(s.how)}</div></td><td class="num neg"><b>${inr(s.loss)}</b></td><td class="num">${pct(s.loss/p.total,1)}</td></tr>`).join("");
@@ -954,7 +957,7 @@ function rRisk(){
   const secs=Object.entries(p.sector_weights).map(([s,v])=>`<div class="small" style="display:flex;gap:8px;align-items:center"><span style="width:110px">${esc(s)}</span><div class="hbar" style="flex:1"><i style="width:${Math.min(100,v*100/u.max_sector_pct*100)}%;background:${v*100>u.max_sector_pct?"var(--neg)":"var(--acc)"}"></i></div><span class="mute" style="width:100px;text-align:right">${pct(v,0)} / ${u.max_sector_pct}%</span></div>`).join("");
   const rules=r.alerts_meta.rules, help=S.meta.alert_rule_help;
   const ruleIn=Object.keys(rules).map(key=>`<div class="field"><label><span>${esc(help[key])}</span><input type="number" step="any" data-rule="${key}" value="${rules[key]}" style="width:90px"></label></div>`).join("");
-  $("#main").innerHTML=`<div class="kpis">${kp}</div>
+  $("#main").innerHTML=`<div class="kpis kpis-4">${kp}</div>
    <div class="grid2"><div>
     <div class="card"><h3>Where the risk really sits <span class="r mute small">share of portfolio variance vs share of value</span></h3><table><tbody>${contrib}</tbody></table>
       <div class="small mute" style="margin-top:6px">Concentration score ${p.concentration_score} (stocks ${p.stock_concentration}, sectors ${p.sector_concentration}). ${k.top_risk_symbol} alone explains ${pct(k.top_risk_share,0)} of risk.</div></div>
