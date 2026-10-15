@@ -102,14 +102,14 @@ samples serially correlated; the filings agent is not back-tested (single as-of 
 
 ## 6. Personalisation proof
 
-`/api/compare` runs the four market agents **once** for a stock and synthesises per user. For VIKRAMINFRA (parabolic rally,
+`GET /api/comparisons/{symbol}` runs the four market agents **once** for a stock and synthesises per user. For VIKRAMINFRA (parabolic rally,
 adverse filings) the composite is -0.03 for the conservative investor (filings weigh 56%), +0.14 for the moderate one and
 +0.35 for the aggressive one; actions are WATCH / WATCH / HOLD(over position limit) with different reasons. Editing a user's
-risk tolerance / limits in the UI persists to SQLite and changes the next run.
+risk tolerance / limits in the UI (`PATCH /api/me`) persists to SQLite and changes the next run. The comparison is you plus the three public demo personas; it never includes other customers.
 
 ## 7. Extensions (all seven implemented)
 
-**1. Live multiple-source data** (`app/live.py`, *Live data* tab, `POST /api/live`). `LiveFeed` implements the same interface as the
+**1. Live multiple-source data** (`app/live.py`, *Live data* tab, `GET /api/live`). `LiveFeed` implements the same interface as the
 simulated feed, so the same six agents, output contract, synthesis and degraded-data handling run on real NSE tickers:
 Yahoo Finance daily bars (prices, volume, dividend events), NSE corporate-announcements API (disclosures, results and
 investor-call notices, indexed into a live RAG index; each citation links to the NSE attachment), Google News RSS (headlines, used for
@@ -154,7 +154,7 @@ concentration movement, recommendation flips (e.g. TECHNOVA ACCUMULATE -> WATCH)
 accept/ignore decisions to the session whose advice they answered. Decision history feeds back into the Behaviour agent; profile, rules, watchlist and
 trades survive restarts.
 
-**7. Parallel-execution optimisation** (`runcache.py`, `engine.run_agents`, `/api/benchmark`, `/api/benchmark/load`). Changes: a per-run
+**7. Parallel-execution optimisation** (`runcache.py`, `engine.run_agents`, `GET /api/benchmark`, `GET /api/benchmark/load`). Changes: a per-run
 single-flight request cache (concurrent agents share one feed call: 48 -> 36 calls for 12 stocks), a retrieval-result cache plus start-up warm-up,
 and **queue-aware deadlines** (a task times out only after it has been *running* too long, so many simultaneous analyses queueing on the pool
 never cause spurious timeouts). Measured with 70-95 ms simulated feed latency: 4 signal agents x 12 stocks sequential 3.97 s -> parallel 0.25 s (15.6x)
@@ -162,7 +162,58 @@ never cause spurious timeouts). Measured with 70-95 ms simulated feed latency: 4
 throughput saturates near 4.5 analyses/s (CPU-bound on the Python GIL, not I/O). Pool size for one analysis: 2 workers 3.0 s, 4 -> 1.5 s, 8 -> 0.8 s,
 16 -> 0.45 s, 48 -> 0.30 s.
 
-## 8. Honest limitations
+## 8. Application layer: API, auth, data model, configuration
+
+Everything above is the *intelligence*. This section is the *product* around it.
+
+### 8.1 API design (full reference: [API_SPEC.md](API_SPEC.md))
+Resource-oriented REST under `/api`: nouns in URLs, HTTP verbs for intent, correct status codes.
+`POST /api/analyses` -> **201** + `Location`; `GET /api/analyses/{id}`; `DELETE` -> **204**; `PATCH /api/me`; `PUT/DELETE /api/me/watchlist/{symbol}`;
+`POST /api/me/trades` -> 201 (409 on business-rule conflicts such as insufficient cash); validation failures -> **422**; malformed JSON -> **400**;
+unauthenticated -> **401**; blocked cross-site write -> **403**; unknown/not-yours -> **404**; too many requests -> **429** (+ `Retry-After`).
+**Every** error body is exactly `{"error": "<message>"}`. Stack traces never reach the client: unexpected exceptions are logged server-side with a
+request id (`X-Request-ID`) and the client sees a generic message. The UI maps every failure to a friendly toast / inline message / retry card.
+
+### 8.2 Authentication
+* **Accounts**: email + password. Passwords are hashed with **scrypt** (per-user random salt, memory-hard); only `scrypt$N$r$p$salt$hash` is stored and no
+  endpoint ever returns it. Policy: 10+ chars, a letter and a number. Login uses constant-time comparison and does a dummy hash for unknown emails, and returns the
+  same message for "no such user" and "wrong password" (no account enumeration). Failed logins are rate-limited per IP+email (5 per 15 min -> 429).
+* **Sessions**: a random 256-bit token in an **HttpOnly, SameSite=Lax, (Secure in production)** cookie. The database stores only `HMAC-SHA256(secret, token)`, so a leaked
+  database cannot be replayed as live sessions. New login/registration replaces any existing session (no session fixation). Logout deletes the session server-side.
+  Sessions expire (7 days members, 24 h guests) and expired rows are purged.
+* **CSRF**: SameSite=Lax cookie plus an `Origin` check on every write: a browser-supplied Origin that is not same-origin (or in `VF_ALLOWED_ORIGINS`) gets 403.
+* **Guest sandboxes**: "Explore instantly" clones one of three seeded demo personas into a **private, expiring guest account**. Nobody else can see it, so a public
+  demo does not mean shared data. The three templates themselves cannot sign in.
+
+### 8.3 Authorisation: no user can reach another user's data
+There is **no user id in any URL or request body**. Every protected route depends on `current_user` (cookie -> session -> user) and passes *that* id into the store,
+and every store query filters on it. Consequences, all covered by tests: other users' analyses/recommendations/decisions return **404** (existence is not revealed);
+a body that tries to name a user or role is rejected (422); comparison/strategy endpoints only ever include you plus the public demo personas; `GET /api/me` is the only way
+to read a profile. Reference-data routes (prices, filings search, benchmarks) also require sign-in because they are the expensive compute.
+
+### 8.4 Data model (SQLite, schema v2, foreign keys ON)
+```
+instruments(symbol PK, name, sector)
+users(id PK, role{member|guest|template}, email UNIQUE, password_hash, name, risk limits..., cash, derived_from -> users)
+auth_sessions(user_id -> users CASCADE, token_hash UNIQUE, expires_at)
+holdings(user_id -> users CASCADE, symbol -> instruments, qty, avg_cost)      PK(user_id, symbol)
+trades(user_id -> users CASCADE, symbol -> instruments, side{BUY|SELL}, qty>0, price>0)
+watchlist(user_id -> users CASCADE, symbol -> instruments)                    alert_rules(user_id -> users CASCADE, key, value)
+analysis_runs(user_id -> users CASCADE) <- recommendations(run_id CASCADE, user_id, symbol -> instruments, payload JSON)
+                                         <- snapshots(run_id CASCADE, user_id)      decisions(user_id, rec_id -> recommendations SET NULL, symbol, choice{accepted|ignored|modified})
+```
+CHECK constraints enforce value ranges and "a member always has an email and a password hash; templates and guests never have one". `DELETE /api/me` cascades to everything the user
+owns. Trades update holdings and cash **in one transaction**. `recommendations.payload` and `analysis_runs.metrics` are deliberate JSON snapshots of an analysis at the time it was made (history
+must not change when the model changes). Pre-v2 databases (no auth) are rebuilt on start because they only ever held seeded demo data.
+
+### 8.5 Configuration and secrets
+`app/config.py` reads real environment variables first, then an optional git-ignored `.env`. `VF_ENV` = `development` | `test` | `production`.
+**Production refuses to start** unless `VF_SECRET_KEY` is 32+ random characters and `VF_COOKIE_SECURE` is not disabled; it also turns on HSTS, same-origin enforcement,
+proxy-aware client IPs and switches the interactive API docs off. Development generates its own secret into `data/` (git-ignored) so **no secret exists anywhere in the repository**.
+Templates: `.env.example` (development) and `.env.production.example`; deployment values live in the host's dashboard / `render.yaml` (`generateValue` for the secret).
+Security headers on every response: CSP, `X-Content-Type-Options`, `X-Frame-Options: DENY`, `Referrer-Policy`, `Permissions-Policy`, `Cache-Control: no-store` on `/api`.
+
+## 9. Honest limitations
 
 - Synthetic companies, prices, filings and news; the lexicon scorer is simple (no negation handling beyond phrase lists).
 - Dense retrieval uses LSA (trained on the corpus plus a glossary), not a neural sentence embedding; swap `LSAEmbedder.embed` for a
@@ -171,3 +222,5 @@ throughput saturates near 4.5 analyses/s (CPU-bound on the Python GIL, not I/O).
 - The behavioural archetype is rule-based on trade context; the confidence "calibration" is bucketed hit rates, not a fitted model.
 - Orchestrator deadlines cannot kill a hung Python thread (it is abandoned, not terminated).
 - No transaction costs, taxes, liquidity or slippage in sizing.
+- Auth is deliberately minimal: no email verification, password reset, MFA or OAuth. The rate limiter and session cache are in-process (one instance); put Redis behind them to scale out.
+- SQLite and the embedded vector store are single-process; on Render's free tier the disk is ephemeral, so member accounts are lost on restart unless a persistent disk is mounted.

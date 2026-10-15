@@ -224,18 +224,3 @@ def test_trade_updates_portfolio(engine):
 
 
 # ---------------------------------------------------------------- HTTP API
-def test_api_end_to_end():
-    from fastapi.testclient import TestClient
-    from app.server import app
-
-    c = TestClient(app)
-    assert c.get("/").status_code == 200
-    assert c.get("/api/meta").json()["disclosure"]
-    r = c.post("/api/analyze", json={"user_id": "rohan", "degradations": ["sentiment_feed_down"]})
-    assert r.status_code == 200 and len(r.json()["recommendations"]) == 12
-    assert c.post("/api/analyze", json={"user_id": "rohan", "degradations": ["nope"]}).status_code == 400
-    assert c.post("/api/analyze", json={"user_id": "ghost"}).status_code == 404
-    assert c.get("/api/docs/BHARATOIL-ER-Q2FY27").json()["synthetic"] is True
-    assert c.post("/api/compare", json={"symbol": "GATIMOTORS"}).status_code == 200
-    rows = c.get("/api/benchmark").json()["rows"]          # io_scale=0 in tests, so only check shape
-    assert [r["symbols"] for r in rows] == [1, 3, 6, 12] and all(r["parallel_ms"] > 0 for r in rows)

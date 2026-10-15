@@ -320,10 +320,40 @@ main{padding:var(--s4) var(--s5)}
 .subcard{background:var(--surface2);border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s4);min-width:0}
 .subcard h3{display:flex;align-items:center;flex-wrap:wrap;gap:var(--s2) var(--s3);margin:0 0 var(--s3);font-size:.95rem;font-weight:600}
 .subcard h3 .r{margin-left:auto;font-weight:400;font-size:.8rem;color:var(--mute)}
+
+/* ============ Sign-in, account chip, toasts, inline form errors ============ */
+.acct{display:flex;align-items:center;gap:var(--s3);flex:1 1 380px;max-width:660px;min-width:0}
+.acct .chip-user{display:flex;align-items:center;gap:var(--s3);min-width:0;padding:6px var(--s3) 6px 6px;border:1px solid var(--line);border-radius:99px;background:var(--surface2)}
+.avatar{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;background:linear-gradient(135deg,var(--accent),var(--accent2));color:var(--mark-ink)}
+.acct .who{min-width:0;line-height:1.2}.acct .who b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.acct .who small{display:block;color:var(--mute);font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.anon #acct,body.anon #run,body.anon #arch,body.anon nav,body.anon #degr,body.anon #panelhead,body.anon #subnav{display:none!important}
+.auth{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:var(--s5);align-items:start;max-width:1000px;margin:var(--s5) auto}
+@media(max-width:900px){.auth{grid-template-columns:minmax(0,1fr);margin:var(--s3) auto}}
+.auth .card{margin-bottom:0}
+.seg2{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden;margin-bottom:var(--s4)}
+.seg2 button{border:0;border-radius:0;background:var(--surface);color:var(--mute);min-height:42px;box-shadow:none}
+.seg2 button:hover{transform:none;box-shadow:none;background:var(--surface2)}
+.seg2 button.on{background:color-mix(in srgb,var(--accent) 14%,var(--surface));color:var(--accent);box-shadow:inset 0 -2px 0 var(--accent)}
+.auth .field label{display:block;margin-bottom:6px}
+.auth input{width:100%}
+.wide{width:100%}
+.formerr{min-height:1.4em;margin:var(--s2) 0 var(--s3);font-size:.9rem;color:var(--neg)}
+.formerr.info{color:var(--mute)}
+.personas{display:grid;gap:var(--s3)}
+.persona{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;width:100%;padding:var(--s3) var(--s4)}
+.persona b{font-size:1rem}.persona span{font-size:.875rem;color:var(--mute);font-weight:400}
+.persona small{color:var(--accent);font-size:.78rem;letter-spacing:.04em;text-transform:uppercase}
+#toasts{position:fixed;left:50%;bottom:var(--s5);transform:translateX(-50%);z-index:90;display:grid;gap:var(--s2);width:min(92vw,460px);pointer-events:none}
+.toast{pointer-events:auto;display:flex;gap:var(--s3);align-items:flex-start;padding:var(--s3) var(--s4);border-radius:var(--r-sm);background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--neg);box-shadow:var(--shadow);animation:pop .25s var(--ease);font-size:.95rem}
+.toast.ok{border-left-color:var(--pos)}
+.toast button{margin-left:auto;min-height:0;padding:0 6px;border:0;background:none;color:var(--mute);box-shadow:none}
+@media(max-width:1400px){.acct{order:3;flex:1 1 100%;max-width:none}}
+@media(max-width:700px){.acct .chip-user{flex:1}}
 </style>
 </head>
 <body>
 <div id="bar" aria-hidden="true"></div>
+<div id="toasts" role="status" aria-live="polite"></div>
 <header>
   <div class="brand">
     <a class="brand-link" href="/" aria-label="VibeFinance home">
@@ -336,7 +366,7 @@ main{padding:var(--s4) var(--s5)}
     </a>
     <span class="badge warn" title="All companies, prices, filings and flows are synthetic">Synthetic data</span>
     <span class="badge" id="asof"></span></div>
-  <div class="users" id="users" role="group" aria-label="Investor profile"></div>
+  <div class="acct" id="acct" aria-label="Account"></div>
   <div class="actions">
     <button class="primary" id="run">Run analysis</button>
     <button id="arch" aria-label="Architecture and decision logic"><span class="arch-long">Architecture</span><span class="arch-short">Docs</span></button>
@@ -475,12 +505,38 @@ function titleizeHeadings(root){
     if(n) n.textContent = titleCase(n.textContent);
   });
 }
-const S = {animate:true, rid:0, meta:null, user:"asha", degr:new Set(), res:null, sym:null, tab:"dash", compare:null, bench:null, prices:{}, busy:false};
+const S = {animate:true, rid:0, meta:null, me:null, degr:new Set(), res:null, sym:null, tab:"dash", compare:null, bench:null, prices:{}, busy:false};
 
-async function api(path, opts){
-  const r = await fetch(path, opts && {method:opts.method||"POST", headers:{"content-type":"application/json"}, body: JSON.stringify(opts.body)});
-  if(!r.ok) throw new Error(path + " -> " + r.status + " " + await r.text());
-  return r.json();
+class ApiError extends Error { constructor(status, message){ super(message); this.status = status; } }
+/* Every request goes through here: JSON in/out, cookie auth, and one place that turns failures into friendly messages. */
+async function api(path, opts = {}){
+  const method = (opts.method || (opts.body !== undefined ? "POST" : "GET")).toUpperCase();
+  const init = {method, headers:{"Accept":"application/json"}, credentials:"same-origin"};
+  if(opts.body !== undefined){ init.headers["Content-Type"] = "application/json"; init.body = JSON.stringify(opts.body); }
+  let r;
+  try { r = await fetch(path, init); }
+  catch(e){ throw new ApiError(0, "Can't reach the server. Check your connection and try again."); }
+  if(r.status === 204) return null;
+  let j = null; try { j = await r.json(); } catch(e){}
+  if(!r.ok){
+    const msg = (j && j.error) || (r.status >= 500 ? "Something went wrong on our side. Please try again in a moment." : "That didn't work. Please try again.");
+    if(r.status === 401 && S.me && !path.startsWith("/api/auth/")) onSessionExpired();
+    throw new ApiError(r.status, msg);
+  }
+  return j;
+}
+function toast(msg, kind = "error"){
+  const el = document.createElement("div"); el.className = "toast " + (kind === "ok" ? "ok" : "");
+  el.innerHTML = `<span>${esc(msg)}</span><button aria-label="Dismiss">✕</button>`;
+  el.querySelector("button").onclick = () => el.remove();
+  $("#toasts").appendChild(el); setTimeout(() => el.remove(), kind === "ok" ? 3500 : 6500);
+}
+/* wrap event handlers: any failure becomes a toast, never an unhandled rejection */
+const guard = fn => async (...a) => { try { return await fn(...a); } catch(e){ if(e.status !== 401) toast(e.message || "Something went wrong."); } };
+function renderFailure(e){
+  if(e && e.status === 401) return;
+  $("#main").innerHTML = `<div class="card">${empty("warn", "This section couldn't load", (e && e.message) || "Something went wrong.", ["Try again", "id=rerender"])}</div>`;
+  const b = $("#rerender"); if(b) b.onclick = () => render();
 }
 
 /* ---------- small renderers ---------- */
@@ -498,13 +554,21 @@ function actionChip(a){return `<span class="chip ${ACT[a]}">${a}</span>`}
 /* ---------- boot ---------- */
 async function boot(){
   $("#main").innerHTML = skeleton("dash"); $("#theme").innerHTML = SUN;
-  S.meta = await api("/api/meta");
-  $("#asof").textContent = "as of " + S.meta.as_of;
-  renderUsers(); renderDegr(); renderTabs();
-  $("#run").onclick = () => run(); $("#arch").onclick = showArch;
   setTheme(document.documentElement.dataset.theme || "dark");
-  document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if(g){ e.preventDefault(); S.tab = g.dataset.goto; S.animate=true; renderTabs(); render(); window.scrollTo({top:0, behavior:"smooth"}); } });
-  $("#arch2").onclick = showArch;
+  wireShell();
+  try { S.meta = await api("/api/meta"); }
+  catch(e){ $("#main").innerHTML = `<div class="card">${empty("warn", "The service is unavailable", e.message, ["Try again", "id=retryboot"])}</div>`; $("#retryboot").onclick = () => boot(); return; }
+  $("#asof").textContent = "as of " + S.meta.as_of;
+  if(!S.meta.docs_url) document.querySelectorAll('footer a[href="/docs"]').forEach(a => a.closest("li").remove());
+  try { S.me = (await api("/api/me")).user; }
+  catch(e){ S.me = null; if(e.status && e.status !== 401) toast(e.message); }
+  if(S.me) await enterApp(); else renderAuth();
+}
+let _wired = false;
+function wireShell(){
+  if(_wired) return; _wired = true;
+  $("#run").onclick = () => run(); $("#arch").onclick = showArch; $("#arch2").onclick = showArch;
+  document.addEventListener("click", e => { const g = e.target.closest("[data-goto]"); if(g){ e.preventDefault(); if(!S.me){ toast("Sign in to open that section.", "ok"); return; } S.tab = g.dataset.goto; S.animate=true; renderTabs(); render(); window.scrollTo({top:0, behavior:"smooth"}); } });
   new MutationObserver(() => titleizeHeadings()).observe($("#main"), {childList:true});
   document.querySelectorAll("footer a, footer button.lnk").forEach(a => a.textContent = titleCase(a.textContent));
   new MutationObserver(() => { clearTimeout(_subTimer); _subTimer = setTimeout(buildSubnav, 80); }).observe($("#main"), {childList:true});
@@ -513,11 +577,77 @@ async function boot(){
   matchMedia("(max-width:700px)").addEventListener("change", () => { if(S.res) render(); });
   document.addEventListener("keydown", e => { if(e.key==="Escape"){ $("#modal").classList.remove("on"); } });
   document.addEventListener("click", e => { const t=e.target.closest("[data-src]"); if(t) openSource(t.dataset.src); if(e.target.id==="modal") $("#modal").classList.remove("on"); });
+}
+async function enterApp(){
+  document.body.classList.remove("anon");
+  S.res = null; S.compare = null; S.prices = {}; S.live = null; S.sym = null; S.tab = "dash"; S.animate = true;
+  renderAccount(); renderDegr(); renderTabs();
   await run();
 }
-function renderUsers(){
-  $("#users").innerHTML = S.meta.users.map(u => `<button class="user ${u.id===S.user?"on":""}" data-u="${u.id}" aria-pressed="${u.id===S.user}"><b>${esc(u.name.split(" ")[0])}<span class="ln"> ${esc(u.name.split(" ").slice(1).join(" "))}</span></b><small>risk ${u.risk_tolerance}/10<span class="cap"> · max position ${u.max_position_pct}%</span></small></button>`).join("");
-  document.querySelectorAll(".user").forEach(el => el.onclick = () => { S.user = el.dataset.u; S.compare=null; S.animate=true; renderUsers(); run(); });
+function resetToSignedOut(message, info){
+  S.me = null; S.res = null; S.compare = null; S.live = null; S.prices = {};
+  renderAuth(message, info);
+}
+function onSessionExpired(){ if(S.me) resetToSignedOut("Your session has expired. Please sign in again.", true); }
+const ROLE_LABEL = {member:"Member", guest:"Guest Sandbox", template:"Demo"};
+function renderAccount(){
+  const u = S.me; if(!u){ $("#acct").innerHTML = ""; return; }
+  $("#acct").innerHTML = `<div class="chip-user"><span class="avatar" aria-hidden="true">${esc(u.name.trim()[0].toUpperCase())}</span><span class="who"><b>${esc(u.name)}</b><small>${ROLE_LABEL[u.role]} · Risk ${u.risk_tolerance}/10</small></span></div>
+    <button class="sm" id="signout">Sign Out</button>`;
+  $("#signout").onclick = guard(signOut);
+}
+async function signOut(){ await api("/api/auth/logout", {method:"POST"}); resetToSignedOut("You have been signed out.", true); }
+
+function renderAuth(message = "", info = false){
+  document.body.classList.add("anon");
+  $("#acct").innerHTML = ""; $("#panelhead").innerHTML = ""; $("#subnav").hidden = true;
+  const personas = (S.meta && S.meta.personas || []).map(p => `<button class="persona" data-persona="${esc(p.id)}"><small>Risk ${p.risk_tolerance}/10 · ${p.horizon_years}-Year Horizon</small><b>${esc(p.name)}</b><span>${esc(p.bio)}</span></button>`).join("");
+  const minLen = S.meta ? S.meta.password_min_length : 10;
+  $("#main").classList.add("enter");
+  $("#main").innerHTML = `<div class="auth">
+    <div class="card"><h3>Welcome To VibeFinance</h3>
+      <div class="seg2" role="tablist"><button class="on" data-am="login" role="tab">Sign In</button><button data-am="register" role="tab">Create Account</button></div>
+      <form id="authform" novalidate>
+        <div class="field" id="f-name" hidden><label for="a-name">Your Name</label><input id="a-name" autocomplete="name" maxlength="60" placeholder="Priya Sharma"></div>
+        <div class="field"><label for="a-email">Email</label><input id="a-email" type="email" autocomplete="email" inputmode="email" placeholder="you@example.com"></div>
+        <div class="field"><label for="a-pass">Password</label><input id="a-pass" type="password" autocomplete="current-password" placeholder="••••••••••">
+          <div class="small mute" id="pw-hint" hidden>At least ${minLen} characters, with a letter and a number.</div></div>
+        <div class="formerr ${info ? "info" : ""}" id="autherr" role="alert" aria-live="assertive">${esc(message)}</div>
+        <button class="primary wide" id="authgo" type="submit">Sign In</button>
+      </form>
+      <p class="small mute" style="margin:var(--s3) 0 0">Passwords are hashed with scrypt and never stored in plain text. Your session lives in an HttpOnly cookie, and only you can see your portfolio and history.</p></div>
+    <div class="card"><h3>Or Explore Instantly</h3>
+      <p class="small mute" style="margin-top:0">Open a private sandbox preloaded with one of three demo investors. Nobody else can see it, and it deletes itself after 24 hours.</p>
+      <div class="personas">${personas || empty("list", "No demo investors available", "Create an account instead.")}</div></div></div>`;
+  let mode = "login";
+  const setMode = m => { mode = m;
+    document.querySelectorAll("[data-am]").forEach(b => { b.classList.toggle("on", b.dataset.am === m); b.setAttribute("aria-selected", b.dataset.am === m); });
+    $("#f-name").hidden = m !== "register"; $("#pw-hint").hidden = m !== "register";
+    $("#a-pass").autocomplete = m === "register" ? "new-password" : "current-password";
+    $("#authgo").textContent = m === "register" ? "Create Account" : "Sign In"; $("#autherr").textContent = ""; };
+  document.querySelectorAll("[data-am]").forEach(b => b.onclick = () => setMode(b.dataset.am));
+  const fail = msg => { const e = $("#autherr"); e.className = "formerr"; e.textContent = msg; };
+  $("#authform").onsubmit = async ev => {
+    ev.preventDefault();
+    const email = $("#a-email").value.trim(), password = $("#a-pass").value, name = $("#a-name").value.trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return fail("Enter a valid email address.");
+    if(!password) return fail("Enter your password.");
+    if(mode === "register"){
+      if(!name) return fail("Tell us your name so we can personalise your dashboard.");
+      if(password.length < minLen) return fail(`Choose a password of at least ${minLen} characters.`);
+      if(!/[A-Za-z]/.test(password) || !/\d/.test(password)) return fail("Your password needs at least one letter and one number.");
+    }
+    const btn = $("#authgo"); btn.disabled = true; const label = btn.textContent; btn.textContent = mode === "register" ? "Creating your account…" : "Signing in…";
+    try {
+      const r = await api(mode === "register" ? "/api/auth/register" : "/api/auth/login", {body: mode === "register" ? {email, password, name} : {email, password}});
+      S.me = r.user; await enterApp();
+    } catch(e){ fail(e.message); btn.disabled = false; btn.textContent = label; }
+  };
+  document.querySelectorAll("[data-persona]").forEach(b => b.onclick = async () => {
+    document.querySelectorAll("[data-persona]").forEach(x => x.disabled = true);
+    try { S.me = (await api("/api/auth/guest", {body:{persona:b.dataset.persona}})).user; await enterApp(); }
+    catch(e){ fail(e.message); document.querySelectorAll("[data-persona]").forEach(x => x.disabled = false); }
+  });
 }
 function renderDegr(){
   const n = S.degr.size, d = $("#degr");
@@ -540,15 +670,16 @@ async function run(){
   if(S.res) $("#main").classList.add("busy"); else $("#main").innerHTML = skeleton("dash");
   let failed = null;
   try {
-    S.res = await api("/api/analyze", {body:{user_id:S.user, degradations:[...S.degr]}});
+    S.res = await api("/api/analyses", {body:{degradations:[...S.degr]}});
     if(!S.sym || !S.res.recommendations.find(r=>r.symbol===S.sym)) S.sym = S.res.recommendations[0].symbol;
   } catch(e){ failed = e; }
   S.busy = false; $("#bar").classList.remove("on"); $("#run").disabled = false; $("#main").classList.remove("busy");
   if(failed && !S.res){
-    $("#main").innerHTML = `<div class="card">${empty("warn","Couldn't load the analysis", failed.message.slice(0,160), ["Try again","id=retry"])}</div>`;
+    if(failed.status === 401) return;
+    $("#main").innerHTML = `<div class="card">${empty("warn","Couldn't load the analysis", failed.message, ["Try again","id=retry"])}</div>`;
     $("#retry").onclick = () => run(); return;
   }
-  if(failed) $("#main").insertAdjacentHTML("afterbegin", `<div class="box">Refresh failed: ${esc(failed.message.slice(0,160))}. Showing the previous result.</div>`);
+  if(failed){ if(failed.status !== 401) toast(failed.message + " Showing your previous result."); }
   else render();
 }
 function render(){
@@ -557,7 +688,10 @@ function render(){
   renderPanelHead();
   const m = $("#main"); m.classList.toggle("enter", S.animate); S.animate = false;
   if(ASYNC_TABS.has(S.tab)) m.innerHTML = skeleton(S.tab==="eval"?"eval":"x");
-  ({dash:rDash, analysis:rAnalysis, person:rPerson, risk:rRisk, search:rSearch, live:rLive, eval:rEval, hist:rHist})[S.tab]();
+  try {
+    const out = ({dash:rDash, analysis:rAnalysis, person:rPerson, risk:rRisk, search:rSearch, live:rLive, eval:rEval, hist:rHist})[S.tab]();
+    if(out && out.catch) out.catch(renderFailure);
+  } catch(e){ renderFailure(e); }
   document.querySelectorAll("[data-sym]").forEach(el => el.onclick = () => { S.sym = el.dataset.sym; if(el.dataset.go){S.tab=el.dataset.go; renderTabs();} S.compare=null; S.animate=true; render(); window.scrollTo({top:0}); });
 }
 
@@ -610,9 +744,9 @@ function recList(){
         <div>${r.conflicts.length?`<span class="chip warn" title="${esc(r.disagreement)}">agents disagree</span> `:""}${(r.action!=="WATCH"||r.held)?`<button class="sm" data-dec="${r.rec_id}|${r.symbol}|${r.action}|accepted">Accept</button> <button class="sm" data-dec="${r.rec_id}|${r.symbol}|${r.action}|ignored">Ignore</button>`:""}</div></div></div>`).join("");
 }
 function bindDecisions(){
-  document.querySelectorAll("[data-dec]").forEach(b => b.onclick = async e => { e.stopPropagation();
-    const [rid,sym,act,choice]=b.dataset.dec.split("|"); await api("/api/decisions",{body:{user_id:S.user,rec_id:+rid,symbol:sym,action:act,choice}});
-    b.parentElement.innerHTML = `<span class="chip pos">recorded: ${choice}</span> <span class="small mute">stored; the Behaviour agent will see it next run</span>`; });
+  document.querySelectorAll("[data-dec]").forEach(b => b.onclick = guard(async e => { e.stopPropagation();
+    const [rid,sym,act,choice]=b.dataset.dec.split("|"); await api("/api/me/decisions",{body:{rec_id:+rid,symbol:sym,action:act,choice}});
+    b.parentElement.innerHTML = `<span class="chip pos">recorded: ${choice}</span> <span class="small mute">stored; the Behaviour agent will see it next run</span>`; }));
 }
 function portfolioCard(){
   const p=S.res.portfolio, a=S.res.portfolio_after, u=S.res.user;
@@ -686,11 +820,11 @@ function priceChart(p){
 /* ---------- personalisation ---------- */
 async function rPerson(){
   const rid=S.rid;
-  if(!S.compare) S.compare = await api("/api/compare",{body:{symbol:S.sym,degradations:[...S.degr]}});
+  if(!S.compare) S.compare = await api("/api/comparisons/"+encodeURIComponent(S.sym)+"?degradations="+encodeURIComponent([...S.degr].join(",")));
   if(rid!==S.rid) return;
   const c=S.compare, u=S.res.user;
   const mi = AGENTS.map(a=>{const o=c.market_inputs[a];return `<div class="agentcard"><h4>${esc(ANAME[a])}</h4>${chip(o.label,o.score,o.status)} <span class="small mute">score ${o.score>=0?"+":""}${o.score.toFixed(2)} · conf ${pct(o.confidence,0)}</span></div>`}).join("");
-  const cols = c.results.map(x=>{const r=x.recommendation,us=x.user;return `<div class="subcard"><h3>${esc(us.name)} <span class="r">${esc(r.profile_label)}</span></h3>
+  const cols = c.results.map(x=>{const r=x.recommendation,us=x.user;return `<div class="subcard"><h3>${esc(us.name)} ${x.is_you?'<span class="chip pos">You</span>':'<span class="chip neu">Demo</span>'} <span class="r">${esc(r.profile_label)}</span></h3>
      <div class="small mute">risk ${us.risk_tolerance}/10 · max position ${us.max_position_pct}% · max vol ${pct(us.max_volatility,0)} · ${us.horizon_years}y</div>
      <div style="margin:8px 0;font-size:22px">${actionChip(r.action)}</div>
      <table><tbody>
@@ -707,7 +841,7 @@ async function rPerson(){
    <div class="card"><h3>Same market inputs → different advice<span class="r"><select id="psym">${S.res.signals.map(s=>`<option ${s.symbol===S.sym?"selected":""}>${s.symbol}</option>`).join("")}</select></span></h3>
      <div class="small mute" style="margin-bottom:8px">The four market agents ran <b>once</b> for ${c.symbol} (${c.wall_ms} ms incl. per-user agents). Their outputs are identical for every investor; only the personalisation layer (weights, thresholds, limits, behaviour) differs.</div>
      <div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">${mi}</div></div>
-   <div class="card"><h3>Side-by-side advice for ${c.symbol}</h3><div class="grid3">${cols}</div></div>
+   <div class="card"><h3>Side-by-side advice for ${c.symbol}</h3><div class="grid3" style="grid-template-columns:repeat(auto-fit,minmax(250px,1fr))">${cols}</div></div>
    <div class="grid2"><div class="card"><h3>Edit ${esc(u.name)}'s profile (persisted in SQLite)</h3>
      <div class="field"><label>Risk tolerance <b id="rtv">${u.risk_tolerance}</b>/10</label><input type="range" id="rt" min="1" max="10" value="${u.risk_tolerance}"></div>
      <div class="field"><label>Max single position (%)</label><input type="number" id="mp" value="${u.max_position_pct}" min="2" max="60"></div>
@@ -716,8 +850,9 @@ async function rPerson(){
      <div class="card"><h3>Behavioural analytics from trade log</h3>${behaviorCard()}</div></div>`;
   $("#psym").onchange = e => { S.sym=e.target.value; S.compare=null; render(); };
   $("#rt").oninput = e => $("#rtv").textContent = e.target.value;
-  $("#saveprof").onclick = async () => { await api("/api/users/"+S.user,{method:"PUT",body:{risk_tolerance:+$("#rt").value,max_position_pct:+$("#mp").value,max_volatility:+$("#mv").value/100}});
-    S.meta.users = (await api("/api/meta")).users; S.compare=null; renderUsers(); await run(); };
+  $("#saveprof").onclick = guard(async () => {
+    const r = await api("/api/me",{method:"PATCH",body:{risk_tolerance:+$("#rt").value,max_position_pct:+$("#mp").value,max_volatility:+$("#mv").value/100}});
+    S.me = r.user; renderAccount(); S.compare = null; toast("Profile saved.", "ok"); await run(); });
 }
 function behaviorCard(){
   const b=S.res.behavior;
@@ -790,10 +925,9 @@ function watchCard(){
     ${rows?`<table><tbody>${rows}</tbody></table>`:empty("list","Your watchlist is empty","Add a stock above to get personalised alerts for it.")}</div>`;
 }
 function bindWatch(){
-  document.querySelectorAll("[data-unwatch]").forEach(b=>b.onclick=async e=>{e.stopPropagation(); await setWatch(S.res.watchlist.filter(x=>x!==b.dataset.unwatch));});
-  const a=document.getElementById("wbtn"); if(a) a.onclick=async()=>{const v=document.getElementById("wadd").value; if(v) await setWatch([...S.res.watchlist,v]);};
+  document.querySelectorAll("[data-unwatch]").forEach(b=>b.onclick=guard(async e=>{e.stopPropagation(); await api("/api/me/watchlist/"+encodeURIComponent(b.dataset.unwatch),{method:"DELETE"}); await run();}));
+  const a=document.getElementById("wbtn"); if(a) a.onclick=guard(async()=>{const v=document.getElementById("wadd").value; if(v){ await api("/api/me/watchlist/"+encodeURIComponent(v),{method:"PUT"}); await run(); }});
 }
-async function setWatch(list){ await api("/api/users/"+S.user+"/watchlist",{method:"PUT",body:list}); await run(); }
 
 /* ---------- analysis extras: calibration / uncertainty / counterfactual ---------- */
 function calibCard(r){
@@ -833,7 +967,7 @@ function rRisk(){
     <div class="card"><h3>Your alert rules (persisted)</h3>${ruleIn}<button class="primary" id="saverules">Save rules &amp; re-run</button>
       <div class="small mute" style="margin-top:6px">Alerts are tagged NEW when they were not present in your previous session.</div></div>
    </div></div>`;
-  document.getElementById("saverules").onclick=async()=>{const body={}; document.querySelectorAll("[data-rule]").forEach(i=>body[i.dataset.rule]=+i.value); await api("/api/users/"+S.user+"/alert_rules",{method:"PUT",body}); await run();};
+  document.getElementById("saverules").onclick=guard(async()=>{const body={}; document.querySelectorAll("[data-rule]").forEach(i=>body[i.dataset.rule]=+i.value); await api("/api/me/alert-rules",{method:"PATCH",body}); toast("Alert rules saved.","ok"); await run();});
   bindWatch();
 }
 
@@ -889,7 +1023,7 @@ async function rLive(){
     <div style="display:flex;gap:8px;flex-wrap:wrap"><input id="ltk" value="${esc(L.tickers)}" style="flex:1;min-width:260px;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 10px">
     <button class="primary" id="lgo" ${L.busy?"disabled":""}>${L.busy?"Fetching…":"Fetch live data"}</button></div>
     <div class="small mute" style="margin-top:6px">Advice is personalised to <b>${esc(S.res.user.name)}</b> (${esc(S.res.recommendations[0].profile_label)}). Degraded-data toggles above also apply here.</div></div>${body}`;
-  $("#lgo").onclick=async()=>{L.tickers=$("#ltk").value; L.busy=true; rLive(); try{ L.data=await api("/api/live",{body:{user_id:S.user,tickers:L.tickers.split(/[ ,]+/).filter(Boolean),degradations:[...S.degr]}}); }catch(e){ L.data={error:e.message}; } L.busy=false; rLive();};
+  $("#lgo").onclick=async()=>{L.tickers=$("#ltk").value; L.busy=true; rLive(); try{ L.data=await api("/api/live?tickers="+encodeURIComponent(L.tickers.split(/[ ,]+/).filter(Boolean).join(","))+"&degradations="+encodeURIComponent([...S.degr].join(","))); }catch(e){ L.data={error:e.message}; } L.busy=false; rLive();};
 }
 function liveBody(d){
   if(d.error) return `<div class="box">${esc(d.error)}</div>`;
@@ -913,9 +1047,19 @@ function liveBody(d){
 }
 
 /* ---------- sessions & changes tab ---------- */
+function accountCard(){
+  const u = S.me;
+  const note = u.role === "guest" ? "This is a private guest sandbox. It is deleted automatically 24 hours after you opened it." : "Your data is stored under your account and is visible only to you.";
+  return `<div class="card"><h3>Account</h3>
+    <table><tbody><tr><td class="mute">Name</td><td class="num">${esc(u.name)}</td></tr>
+    <tr><td class="mute">Type</td><td class="num">${ROLE_LABEL[u.role]}</td></tr>
+    ${u.email ? `<tr><td class="mute">Email</td><td class="num">${esc(u.email)}</td></tr>` : ""}</tbody></table>
+    <p class="small mute">${note}</p>
+    <div style="display:flex;gap:var(--s2);flex-wrap:wrap"><button id="signout2">Sign Out</button><button id="delacct" style="border-color:var(--neg);color:var(--neg)">Delete ${u.role === "guest" ? "Sandbox" : "Account"}</button></div></div>`;
+}
 async function rHist(){
   const rid=S.rid;
-  const [h,tl]=await Promise.all([api("/api/users/"+S.user+"/history",{method:"GET"}), api("/api/users/"+S.user+"/timeline",{method:"GET"})]);
+  const [h,tl]=await Promise.all([api("/api/me/history"), api("/api/me/timeline")]);
   if(rid!==S.rid) return;
   const ds=tl.decision_stats;
   const entry=e=>{const d=e.diff; const bits=[];
@@ -944,8 +1088,12 @@ async function rHist(){
       <select id="tsym">${S.res.signals.map(s=>`<option>${s.symbol}</option>`).join("")}</select>
       <select id="tside"><option>BUY</option><option>SELL</option></select>
       <input type="number" id="tqty" value="10" min="1" style="width:80px"> <button class="primary" id="tgo">Execute at last close</button>
-      <div id="tmsg" class="small mute" style="margin-top:6px">The next analysis session will show the position change as a diff.</div></div></div></div>`;
-  $("#tgo").onclick=async()=>{ try{ const r=await api("/api/users/"+S.user+"/trades",{body:{symbol:$("#tsym").value,side:$("#tside").value,qty:+$("#tqty").value}}); $("#tmsg").textContent="Executed. Cash now "+inr(r.cash)+". Running analysis…"; await run(); S.tab="hist"; renderTabs(); rHist(); }catch(e){ $("#tmsg").textContent=e.message; } };
+      <div id="tmsg" class="small mute" style="margin-top:6px">The next analysis session will show the position change as a diff.</div></div>${accountCard()}</div></div>`;
+  $("#signout2").onclick = guard(signOut);
+  $("#delacct").onclick = guard(async () => {
+    if(!confirm(S.me.role === "guest" ? "Delete this sandbox and everything in it?" : "Permanently delete your account, portfolio and history? This cannot be undone.")) return;
+    await api("/api/me", {method:"DELETE"}); resetToSignedOut("Your data has been deleted.", true); });
+  $("#tgo").onclick=async()=>{ try{ const r=await api("/api/me/trades",{body:{symbol:$("#tsym").value,side:$("#tside").value,qty:+$("#tqty").value}}); $("#tmsg").textContent="Executed. Cash now "+inr(r.cash)+". Running analysis…"; await run(); S.tab="hist"; renderTabs(); rHist(); }catch(e){ $("#tmsg").textContent=e.message; } };
 }
 
 /* ---------- evaluation extras ---------- */

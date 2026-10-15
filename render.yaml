@@ -1,16 +1,31 @@
 # Render Blueprint: New + -> Blueprint -> pick this repo.
-# Single instance / single worker only: the embedded Qdrant store cannot be shared between processes.
+# Single instance / single worker only: the embedded Qdrant store and in-process rate limiter are per-process.
+# Production settings live HERE and in the Render dashboard, never in the repository's .env files
+# (see .env.production.example for the full list and what each one does).
 services:
   - type: web
     name: vibefinance
     runtime: python
-    plan: free                      # sleeps after ~15 min idle; disk is ephemeral (DB + vectors are re-seeded on restart)
+    plan: free                      # sleeps after ~15 min idle; disk is ephemeral (see README: data persistence)
     buildCommand: pip install -r requirements.txt
     startCommand: python run.py --host 0.0.0.0 --port $PORT
-    healthCheckPath: /api/meta
+    healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.8
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: VF_ENV
+        value: production
+      - key: VF_SECRET_KEY          # generated once by Render; never stored in git. Rotating it signs everyone out.
+        generateValue: true
+      - key: VF_COOKIE_SECURE
+        value: "true"
+      - key: VF_TRUST_PROXY
+        value: "true"
+      - key: VF_ENABLE_DOCS
+        value: "false"
+      # Optional: extra browser origins allowed to call the API (same-origin is always allowed), e.g.
+      # - key: VF_ALLOWED_ORIGINS
+      #   value: https://vibefinance.onrender.com

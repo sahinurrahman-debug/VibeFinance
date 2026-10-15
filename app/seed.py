@@ -51,6 +51,7 @@ def seed(store: Store, data: MarketData):
     for u in USERS:
         total = u["total"]
         invested = 0.0
+        initial = []                      # (symbol, qty, cost, date) written after the user row exists (foreign keys)
         for sym, w in u["weights"].items():
             px = float(data.close[sym][-1])
             qty = int(total * w // px)
@@ -61,12 +62,14 @@ def seed(store: Store, data: MarketData):
             pool = ok or list(range(n - 300, n - 60))
             buy_i = int(pool[int(rng.integers(0, len(pool)))])
             cost = float(c[buy_i])
-            store.set_holding(u["id"], sym, qty, round(cost, 2))
-            store.add_trade_log(u["id"], data.dates[buy_i].isoformat(), sym, "BUY", qty, round(cost, 2), "initial position")
+            initial.append((sym, qty, round(cost, 2), data.dates[buy_i].isoformat()))
             invested += qty * px
         cash = round(total - invested, 2)
         store.create_user({**{k: u[k] for k in ("id", "name", "age", "bio", "risk_tolerance", "max_position_pct",
-                                                "max_sector_pct", "max_volatility", "horizon_years")}, "cash": cash})
+                                                "max_sector_pct", "max_volatility", "horizon_years")}, "cash": cash, "role": "template"})
+        for sym, qty, cost, day in initial:
+            store.set_holding(u["id"], sym, qty, cost)
+            store.add_trade_log(u["id"], day, sym, "BUY", qty, cost, "initial position")
         store.set_watchlist(u["id"], u["watch"])
 
         def rt(sym, i_buy, i_sell, qty, note):

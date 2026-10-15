@@ -28,7 +28,7 @@ def risk_analysis(pos: list[dict], total: float, data: MarketData) -> dict:
     w = np.array([p["value"] / total for p in pos])
     R = np.vstack([data.rets[s][1:] for s in syms])                  # positions x sessions (log returns)
     port = w @ R                                                      # cash earns 0
-    cov = np.cov(R[:, -60:])
+    cov = np.atleast_2d(np.cov(R[:, -60:]))
     var_p = float(w @ cov @ w)
     sig_p = float(np.sqrt(max(var_p, 1e-12)))
     mrc = (w * (cov @ w)) / max(var_p, 1e-12)                         # share of portfolio variance (sums to 1)
@@ -94,7 +94,7 @@ def snapshot(user: dict, holdings: list[dict], prices: dict[str, float], data: M
         syms = [p["symbol"] for p in pos]
         R = np.vstack([data.rets[s][-60:] for s in syms])
         w = np.array([p["value"] / total for p in pos])
-        daily = float(np.sqrt(w @ np.cov(R) @ w))
+        daily = float(np.sqrt(w @ np.atleast_2d(np.cov(R)) @ w))      # one holding -> np.cov is a scalar
         vol_ann, var95 = daily * np.sqrt(252), 1.645 * daily * total
 
     flags = []

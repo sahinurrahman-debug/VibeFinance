@@ -182,10 +182,14 @@ class Engine:
                 "watchlist": watch, "signals": signals, "metrics": metrics,
                 "trace": [{**x, "ms": round(x["ms"], 1)} for x in trace], "gantt": gantt, "degradations": sorted(degr)}
 
-    def compare(self, symbol: str, degradations=()) -> dict:
-        """Identical market inputs, every user: proves personalisation."""
+    def compare(self, symbol: str, degradations=(), users: list[dict] | None = None) -> dict:
+        """Identical market inputs, several investors: proves personalisation.
+
+        `users` is an explicit list (the signed-in user plus the public demo personas). It never
+        defaults to "all users", so one customer's profile cannot leak into another's view.
+        """
         degr = frozenset(degradations)
-        users = self.store.list_users()
+        users = users if users is not None else self.store.list_templates()
         bundles = {u["id"]: self._user_bundle(u["id"], degr) for u in users}
         tasks = []
         cache = RunCache() if self.use_cache else None
@@ -217,12 +221,14 @@ class Engine:
         return t
 
     # ------------------------------------------------------------------ strategy back-test
-    def strategy(self, uid: str | None = None) -> dict:
-        users = self.store.list_users()
+    def strategy(self, users: list[dict] | None = None) -> dict:
+        users = users if users is not None else self.store.list_templates()
         key = tuple((u["id"], u["risk_tolerance"], u["max_position_pct"]) for u in users)
-        if self._strategy.get("key") != key:
-            self._strategy = {"key": key, "runs": strategy.run_profiles(self.data, self.backtest["_grid"], users)}
-        return {"runs": self._strategy["runs"], "cost_per_turnover": strategy.COST, "rebalance_sessions": strategy.STEP,
+        if key not in self._strategy:
+            if len(self._strategy) >= 32:
+                self._strategy.pop(next(iter(self._strategy)))
+            self._strategy[key] = strategy.run_profiles(self.data, self.backtest["_grid"], users)
+        return {"runs": self._strategy[key], "cost_per_turnover": strategy.COST, "rebalance_sessions": strategy.STEP,
                 "caveat": "Simulated trending data inflates absolute returns; read the strategies relative to the benchmark and to each other."}
 
     # ------------------------------------------------------------------ live data

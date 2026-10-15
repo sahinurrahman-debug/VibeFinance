@@ -7,7 +7,7 @@ from pathlib import Path
 from . import config
 from .backtest import run_backtest
 from .engine import Engine
-from .market import MarketData, MarketFeed
+from .market import UNIVERSE, MarketData, MarketFeed
 from .rag import RagIndex
 from .rag_eval import evaluate
 from .seed import seed
@@ -21,6 +21,7 @@ def build_engine(db_path: Path | str | None = None, io_scale: float | None = Non
         path.unlink()
     data = MarketData()
     store = Store(path)
+    store.ensure_instruments(UNIVERSE)
     if store.is_empty():
         seed(store, data)
     feed = MarketFeed(data, config.IO_SCALE if io_scale is None else io_scale)
